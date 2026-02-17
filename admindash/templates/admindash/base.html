@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Grocify Admin Portal</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css"
+    />
+
+  <style>
+    :root {
+        --grocify-orange: #fc8019;
+        --sidebar-bg: #ffffff;
+        --main-bg: #f8f9fa;
+        --text-dark: #3d4152;
+    }
+
+    body {
+        background-color: var(--main-bg);
+        font-family: "Segoe UI", sans-serif;
+        color: var(--text-dark);
+        margin: 0;
+    }
+
+    /* Top Navbar */
+    .admin-nav {
+        background: #ffffff;
+        height: 70px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        z-index: 1030;
+    }
+
+    /* Fixed Sidebar */
+    .sidebar {
+        width: 260px;
+        height: calc(100vh - 70px);
+        position: fixed;
+        top: 70px;
+        left: 0;
+        background: var(--sidebar-bg);
+        border-right: 1px solid #edf2f7;
+        padding: 20px;
+        overflow-y: auto;
+        z-index: 1000;
+    }
+
+    /* Corrected Main Content Sizing */
+    .main-content {
+        margin-left: 260px; /* Same as sidebar width */
+        margin-top: 70px;  /* Same as navbar height */
+        padding: 2rem;
+        min-height: calc(100vh - 70px);
+        background-color: var(--main-bg);
+    }
+
+    .nav-link {
+        display: flex;
+        align-items: center;
+        padding: 12px 15px;
+        border-radius: 12px;
+        color: #686b78;
+        font-weight: 600;
+        margin-bottom: 5px;
+        transition: all 0.2s ease;
+        text-decoration: none;
+    }
+
+    .nav-link:hover, .nav-link.active {
+        background: #fff5ed;
+        color: var(--grocify-orange);
+    }
+
+    .nav-link.active {
+        background: var(--grocify-orange) !important;
+        color: #ffffff !important;
+    }
+
+    .btn-orange {
+        background-color: var(--grocify-orange);
+        color: white;
+        border: none;
+        font-weight: 700;
+        padding: 10px 20px;
+        border-radius: 8px;
+    }
+
+    .btn-orange:hover {
+        background-color: #e36a05;
+        color: white;
+    }
+
+    /* Table & Card Refinements */
+    .table img {
+        object-fit: cover;
+        border: 1px solid #eee;
+    }
+</style>
+  </head>
+  <body>
+    <nav class="navbar admin-nav fixed-top px-4">
+      <div
+        class="container-fluid d-flex justify-content-between align-items-center"
+      >
+        <a href="{% url 'admin_dashboard' %}" class="brand-logo">
+          <i class="bi bi-speedometer2"></i> Grocify Admin
+        </a>
+        <div class="d-flex align-items-center gap-3">
+          <a
+            href="{% url 'home' %}"
+            class="btn btn-outline-secondary btn-sm rounded-pill"
+            >View Site</a
+          >
+          <div class="fw-bold">
+            Hi, {{ user.first_name|default:user.username }}
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <div class="sidebar d-none d-lg-block">
+      <div class="nav flex-column">
+        <a
+          href="{% url 'admin_dashboard' %}"
+          class="nav-link {% if request.resolver_match.url_name == 'admin_dashboard' %}active{% endif %}"
+        >
+          <i class="bi bi-grid-1x2-fill"></i> Dashboard
+        </a>
+        <a
+          href="{% url 'product_list_admin' %}"
+          class="nav-link {% if request.resolver_match.url_name == 'add_product' %}active{% endif %}"
+        >
+          <i class="bi bi-plus-circle-fill"></i> Products
+        </a>
+        <a
+          href="{% url 'add_category' %}"
+          class="nav-link {% if request.resolver_match.url_name == 'add_category' %}active{% endif %}"
+        >
+          <i class="bi bi-tags-fill"></i> Category-list
+        </a>
+        <hr class="text-muted opacity-25" />
+        <a href="#" class="nav-link">
+          <i class="bi bi-cart-fill"></i> Orders
+        </a>
+        <a href="#" class="nav-link">
+          <i class="bi bi-people-fill"></i> Customers
+        </a>
+        <form action="{% url 'logout' %}" method="post" class="mt-auto">
+          {% csrf_token %}
+          <button
+            type="submit"
+            class="nav-link text-danger border-0 bg-transparent w-100 text-start"
+          >
+            <i class="bi bi-box-arrow-right"></i> Logout
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <main class="main-content">
+      {% if messages %} {% for message in messages %}
+      <div
+        class="alert alert-{{ message.tags }} alert-dismissible fade show border-0 shadow-sm"
+        role="alert"
+      >
+        {{ message }}
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="alert"
+          aria-label="Close"
+        ></button>
+      </div>
+      {% endfor %} {% endif %} {% block admin_content %} {% endblock %}
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  </body>
+</html>

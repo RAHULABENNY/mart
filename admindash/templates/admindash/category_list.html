@@ -1,0 +1,134 @@
+{% extends 'admindash/base.html' %}
+
+{% block admin_content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold">Category List</h2>
+        <button type="button" class="btn btn-orange shadow-sm" data-bs-toggle="modal" data-bs-target="#addCategoryModal">
+            <i class="bi bi-plus-lg"></i> Add Category
+        </button>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-body p-0"> 
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="ps-4 py-3">Image</th>
+                            <th class="py-3">Name</th>
+                            <th class="py-3 text-end pe-4">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for category in categories %}
+                        <tr>
+                            <td class="ps-4">
+                                <img src="{{ category.image.url }}" 
+                                     class="rounded-3 shadow-sm" 
+                                     style="width: 60px; height: 60px; object-fit: cover;">
+                            </td>
+                            <td class="fw-semibold">{{ category.name }}</td>
+                            <td class="text-end pe-4">
+                                <div class="btn-group">
+                                    <button type="button" class="btn btn-outline-primary btn-sm px-3" data-bs-toggle="modal" data-bs-target="#editCategoryModal{{ category.id }}">
+                                        Edit
+                                    </button>
+                                    <button type="button" class="btn btn-outline-danger btn-sm px-3" data-bs-toggle="modal" data-bs-target="#deleteCategoryModal{{ category.id }}">
+                                        Delete
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <div class="modal fade" id="editCategoryModal{{ category.id }}" tabindex="-1" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content border-0 shadow" style="border-radius:15px;">
+                                    <div class="modal-header border-bottom-0 pt-4 px-4">
+                                        <h5 class="modal-title fw-bold">Edit Category</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <form method="POST" enctype="multipart/form-data" action="{% url 'edit_category' category.id %}">
+                                        {% csrf_token %}
+                                        <div class="modal-body px-4 text-start">
+                                            <div class="mb-3">
+                                                <label class="form-label fw-bold small">Category Name</label>
+                                                <input type="text" name="name" class="form-control rounded-3" value="{{ category.name }}" required>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label fw-bold small">Category Image</label>
+                                                <input type="file" name="image" class="form-control rounded-3">
+                                                <div class="mt-2">
+                                                    <small class="text-muted">Current image:</small><br>
+                                                    <img src="{{ category.image.url }}" style="width: 50px; height: 50px; border-radius: 8px;">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer border-top-0 pb-4 px-4">
+                                            <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                                            <button type="submit" class="btn btn-orange px-4">Update Category</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="modal fade" id="deleteCategoryModal{{ category.id }}" tabindex="-1" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content border-0 shadow" style="border-radius:15px;">
+                                    <div class="modal-body p-5 text-center">
+                                        <i class="bi bi-exclamation-circle text-danger display-1 mb-4"></i>
+                                        <h4 class="fw-bold">Delete Category?</h4>
+                                        <p class="text-muted">Are you sure you want to delete <strong>{{ category.name }}</strong>? This action cannot be undone.</p>
+                                        <form method="POST" action="{% url 'delete_category' category.id %}">
+                                            {% csrf_token %}
+                                            <div class="d-flex gap-2 justify-content-center mt-4">
+                                                <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal">Cancel</button>
+                                                <button type="submit" class="btn btn-danger px-4">Delete Forever</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {% empty %}
+                        <tr>
+                            <td colspan="3" class="text-center py-4 text-muted">No categories found.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="addCategoryModal" tabindex="-1" aria-labelledby="addCategoryModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow" style="border-radius:15px;">
+            <div class="modal-header border-bottom-0 pt-4 px-4">
+                <h5 class="modal-title fw-bold" id="addCategoryModalLabel">Add New Category</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="POST" enctype="multipart/form-data" action="{% url 'add_category' %}">
+                {% csrf_token %}
+                <div class="modal-body px-4">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Category Name</label>
+                        {{ form.name }} 
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Category Image</label>
+                        {{ form.image }}
+                    </div>
+                </div>
+                <div class="modal-footer border-top-0 pb-4 px-4">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-orange px-4">Save Category</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
