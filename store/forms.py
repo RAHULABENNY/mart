@@ -21,3 +21,20 @@ class CategoryForm(forms.ModelForm):
             'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Category Name'}),
             'image': forms.FileInput(attrs={'class': 'form-control'}),
         }
+
+from django import forms
+from .models import Address
+
+class AddressForm(forms.ModelForm):
+    class Meta:
+        model = Address
+        fields = ['full_name', 'phone', 'address_line', 'city', 'state', 'pincode', 'type']
+        widgets = {
+            'full_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Receiver Name'}),
+            'phone': forms.TextInput(attrs={'class': 'form-control', 'placeholder': '10-digit number'}),
+            'address_line': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'House No, Street, Landmark'}),
+            'city': forms.TextInput(attrs={'class': 'form-control'}),
+            'state': forms.TextInput(attrs={'class': 'form-control'}),
+            'pincode': forms.TextInput(attrs={'class': 'form-control'}),
+            'type': forms.Select(attrs={'class': 'form-select'}),
+        }

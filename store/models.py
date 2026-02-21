@@ -36,3 +36,52 @@ class Product(models.Model):
         if self.mrp and self.selling_price:
             return self.mrp - self.selling_price
         return 0
+
+
+
+from django.db import models
+from django.contrib.auth.models import User
+
+# ... existing models ...
+
+class Address(models.Model):
+    ADDRESS_TYPES = (('Home', 'Home'), ('Work', 'Work'), ('Other', 'Other'))
+    
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    full_name = models.CharField(max_length=100)
+    phone = models.CharField(max_length=15)
+    address_line = models.TextField()
+    city = models.CharField(max_length=100)
+    state = models.CharField(max_length=100)
+    pincode = models.CharField(max_length=6)
+    type = models.CharField(max_length=10, choices=ADDRESS_TYPES, default='Home')
+    is_active = models.BooleanField(default=True)
+    latitude = models.FloatField(null=True, blank=True)
+    longitude = models.FloatField(null=True, blank=True)
+
+    def __str__(self):
+        return f"{self.type} - {self.full_name}"
+    
+class Banner(models.Model):
+    POSITIONS = (('Main', 'Main Big Banner'), ('Side', 'Side Small Banner'))
+    
+    title = models.CharField(max_length=100)
+    subtitle = models.CharField(max_length=200, blank=True)
+    image = models.ImageField(upload_to='banners/')
+    badge_text = models.CharField(max_length=50, blank=True, help_text="e.g., 'Free Delivery'")
+    link = models.CharField(max_length=200, default="#", help_text="Button Link")
+    position = models.CharField(max_length=10, choices=POSITIONS)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.position} - {self.title}"
+    
+
+class DeliverySetting(models.Model):
+    store_latitude = models.FloatField(default=9.9312)
+    store_longitude = models.FloatField(default=76.2673)
+    max_delivery_radius_km = models.FloatField(default=10.0)
+
+    def __str__(self):
+        return f"Delivery Radius: {self.max_delivery_radius_km}km"

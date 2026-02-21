@@ -1,0 +1,181 @@
+{% extends 'base.html' %}
+
+{% block body %}
+<div class="container py-5 mt-4">
+    <div id="checkout-alerts"></div>
+
+    <h2 class="fw-bold mb-4">Checkout</h2>
+    
+    <div class="row g-5">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold m-0"><i class="bi bi-geo-alt me-2"></i>Select Delivery Address</h5>
+                    <a href="{% url 'user_dashboard' %}" class="btn btn-sm btn-outline-orange">+ Add New</a>
+                </div>
+                
+                <div class="row g-3" id="address-list">
+                    {% for address in addresses %}
+                    <div class="col-md-6">
+                        <label class="card border-0 bg-light rounded-4 p-3 h-100 cursor-pointer address-card position-relative">
+                            <input type="radio" name="selected_address" value="{{ address.id }}" class="form-check-input position-absolute top-0 end-0 m-3" {% if forloop.first %}checked{% endif %}>
+                            <div class="badge bg-white text-dark border mb-2">{{ address.type }}</div>
+                            <h6 class="fw-bold">{{ address.full_name }}</h6>
+                            <p class="text-muted small mb-1">{{ address.address_line }}</p>
+                            <p class="text-muted small m-0">{{ address.city }}, {{ address.state }} - {{ address.pincode }}</p>
+                            
+                            {% if not address.latitude %}
+                                <div class="text-danger small mt-2 fw-bold"><i class="bi bi-exclamation-triangle"></i> Needs Map Pin</div>
+                            {% endif %}
+                        </label>
+                    </div>
+                    {% empty %}
+                    <div class="col-12 text-center py-4">
+                        <p class="text-muted">No saved addresses found.</p>
+                        <a href="{% url 'user_dashboard' %}" class="btn btn-orange btn-sm">Add Address</a>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm rounded-4 p-4">
+                <h5 class="fw-bold mb-3"><i class="bi bi-credit-card me-2"></i>Payment Method</h5>
+                <div class="form-check p-3 border rounded-3 bg-light">
+                    <input class="form-check-input" type="radio" name="payment" id="cod" checked>
+                    <label class="form-check-label fw-bold" for="cod">Cash on Delivery</label>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white position-sticky" style="top: 100px;">
+                <h5 class="fw-bold mb-3">Order Summary</h5>
+                <div id="checkout-items" class="mb-3" style="max-height: 300px; overflow-y: auto;">
+                    </div>
+                
+                <hr>
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-muted">Item Total</span>
+                    <span id="checkout-total">₹0</span>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-muted">Delivery Fee</span>
+                    <span class="text-success">FREE</span>
+                </div>
+                <hr>
+                <div class="d-flex justify-content-between mb-4">
+                    <h5 class="fw-bold">To Pay</h5>
+                    <h4 class="fw-bold text-orange" id="checkout-grand-total">₹0</h4>
+                </div>
+                
+                <button onclick="confirmOrder()" id="place-order-btn" class="btn btn-orange w-100 py-3 rounded-3 fw-bold fs-5 shadow-sm">
+                    Place Order
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let cart = JSON.parse(localStorage.getItem('grocify_cart')) || [];
+    let totalAmount = 0;
+
+    // Load Cart Data from LocalStorage
+    document.addEventListener('DOMContentLoaded', () => {
+        const container = document.getElementById('checkout-items');
+        
+        if(cart.length === 0) {
+            window.location.href = "{% url 'home' %}";
+            return;
+        }
+
+        let html = '';
+        cart.forEach(item => {
+            let itemTotal = item.price * item.quantity;
+            totalAmount += itemTotal;
+            html += `
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <div>
+                        <span class="badge bg-light text-dark border me-2">${item.quantity}x</span>
+                        <small class="fw-semibold">${item.name}</small>
+                    </div>
+                    <small class="fw-bold">₹${itemTotal}</small>
+                </div>
+            `;
+        });
+
+        container.innerHTML = html;
+        document.getElementById('checkout-total').innerText = '₹' + totalAmount;
+        document.getElementById('checkout-grand-total').innerText = '₹' + totalAmount;
+    });
+
+    function showErrorMsg(msg) {
+        const alertBox = document.getElementById('checkout-alerts');
+        alertBox.innerHTML = `
+            <div class="alert alert-danger alert-dismissible fade show border-0 shadow-sm mb-4" role="alert">
+                <i class="bi bi-x-circle-fill me-2"></i> ${msg}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        `;
+        window.scrollTo(0, 0);
+    }
+
+    function confirmOrder() {
+        const selectedAddress = document.querySelector('input[name="selected_address"]:checked');
+        const btn = document.getElementById('place-order-btn');
+        
+        if (!selectedAddress) {
+            showErrorMsg("Please select a delivery address!");
+            return;
+        }
+
+        const data = {
+            address_id: selectedAddress.value,
+            cart: cart,
+            total: totalAmount
+        };
+
+        btn.disabled = true;
+        btn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span> Placing Order...`;
+
+        fetch("{% url 'place_order' %}", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": "{{ csrf_token }}"
+            },
+            body: JSON.stringify(data)
+        })
+        .then(async response => {
+            const isJson = response.headers.get('content-type')?.includes('application/json');
+            const result = isJson ? await response.json() : null;
+
+            if (response.ok && result && result.status === 'success') {
+                // SUCCESS: Clear cart and redirect to success page
+                localStorage.removeItem('grocify_cart');
+                window.location.href = "{% url 'order_success' %}";
+            } else {
+                // ERROR: Show the specific error from Python (range check, no pin, etc.)
+                throw new Error(result ? result.message : "Server Error");
+            }
+        })
+        .catch(error => {
+            showErrorMsg(error.message);
+            btn.disabled = false;
+            btn.innerHTML = "Place Order";
+        });
+    }
+</script>
+
+<style>
+    .btn-outline-orange { color: #fc8019; border-color: #fc8019; }
+    .btn-outline-orange:hover { background-color: #fc8019; color: white; }
+    .btn-orange { background-color: #fc8019; color: white; border: none; transition: 0.3s; }
+    .btn-orange:hover { background-color: #e36a05; transform: translateY(-2px); }
+    .text-orange { color: #fc8019; }
+    .address-card { transition: 0.2s; border: 2px solid transparent !important; }
+    .address-card:hover { border-color: #fc8019 !important; background-color: #fff5eb !important; }
+    input[type="radio"]:checked + .badge { background-color: #fc8019 !important; color: white !important; }
+    .address-card input[type="radio"]:checked ~ h6 { color: #fc8019; }
+</style>
+{% endblock %}

@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+
+{% block body %}
+<script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+<div class="container text-center py-5 mt-5">
+    
+    <div class="d-flex justify-content-center mb-4">
+        <lottie-player 
+            src="https://assets2.lottiefiles.com/packages/lf20_s2lryxtd.json" 
+            background="transparent" 
+            speed="1" 
+            style="width: 200px; height: 200px;" 
+            autoplay>
+        </lottie-player>
+    </div>
+
+    <div class="fade-in-text">
+        <h2 class="fw-bold text-success mb-3">Order Placed Successfully!</h2>
+        <p class="text-muted fs-5 mb-4">
+            Thank you for shopping with Grocify.<br>
+            Your items will be delivered shortly.
+        </p>
+        
+        <div class="d-flex gap-3 justify-content-center">
+            <a href="{% url 'my_orders' %}" class="btn btn-outline-secondary px-4 rounded-3">View Order</a>
+            <a href="{% url 'home' %}" class="btn btn-orange px-5 rounded-3">Continue Shopping</a>
+        </div>
+    </div>
+
+    <audio id="success-sound" preload="auto">
+        <source src="https://assets.mixkit.co/active_storage/sfx/2019/2019-preview.mp3" type="audio/mpeg">
+    </audio>
+
+</div>
+
+<style>
+    .btn-orange { background-color: #fc8019; color: white; border: none; font-weight: 600; }
+    .btn-orange:hover { background-color: #e36a05; color: white; transform: translateY(-2px); transition: 0.2s; }
+    
+    .fade-in-text {
+        opacity: 0;
+        animation: fadeIn 1s ease-in forwards;
+        animation-delay: 0.5s;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // --- Fire Confetti ---
+        fireConfetti();
+
+        // --- Play Audio ---
+        // Note: Browsers may block audio if the user hasn't interacted with the page yet.
+        const audio = document.getElementById('success-sound');
+        if(audio) {
+            audio.volume = 0.4;
+            var playPromise = audio.play();
+            
+            if (playPromise !== undefined) {
+                playPromise.catch(error => {
+                    console.log("Audio autoplay was prevented by browser policy.");
+                });
+            }
+        }
+    });
+
+    function fireConfetti() {
+        var count = 200;
+        var defaults = { origin: { y: 0.7 } };
+
+        function fire(particleRatio, opts) {
+            confetti(Object.assign({}, defaults, opts, {
+                particleCount: Math.floor(count * particleRatio)
+            }));
+        }
+
+        fire(0.25, { spread: 26, startVelocity: 55, });
+        fire(0.2, { spread: 60, });
+        fire(0.35, { spread: 100, decay: 0.91, scalar: 0.8 });
+        fire(0.1, { spread: 120, startVelocity: 25, decay: 0.92, scalar: 1.2 });
+        fire(0.1, { spread: 120, startVelocity: 45, });
+    }
+</script>
+{% endblock %}

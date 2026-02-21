@@ -1,0 +1,115 @@
+{% extends 'admindash/base.html' %}
+
+{% block admin_content %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="fw-bold m-0">Location & Delivery Range</h3>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+                <h5 class="fw-bold mb-4">Set Range Limit</h5>
+                
+                <form method="POST">
+                    {% csrf_token %}
+                    <div class="mb-4">
+                        <label class="form-label fw-bold text-muted small">DELIVERY RADIUS (KM)</label>
+                        <div class="d-flex align-items-center gap-3">
+                            <input type="range" class="form-range" min="1" max="50" step="1" id="rangeSlider" name="radius" value="{{ current_range|default:10 }}">
+                            <span class="badge rounded-pill p-2 px-3" style="background-color: #fc8019; font-size: 1rem;" id="rangeValue">{{ current_range|default:10 }} km</span>
+                        </div>
+                        <div class="form-text mt-2">Customers outside this circle cannot place orders.</div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-bold text-muted small">STORE CENTER (GPS)</label>
+                        <div class="input-group mb-2">
+                            <span class="input-group-text bg-light border-end-0 small fw-bold">LAT</span>
+                            <input type="text" class="form-control bg-light" name="lat" id="storeLat" value="{{ store_lat|default:9.9312 }}" readonly>
+                        </div>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0 small fw-bold">LNG</span>
+                            <input type="text" class="form-control bg-light" name="lng" id="storeLng" value="{{ store_lng|default:76.2673 }}" readonly>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-orange w-100 py-3 shadow-sm mt-2">
+                        <i class="bi bi-cloud-check-fill me-2"></i> Save Range Settings
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm rounded-4 p-0 overflow-hidden bg-white" style="height: 550px; border: 1px solid #eee;">
+                <div id="adminRangeMap" style="height: 100%; width: 100%;"></div>
+            </div>
+            <div class="mt-2 small text-muted">
+                <i class="bi bi-info-circle me-1"></i> Drag the orange marker to relocate your store center point.
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    :root { --grocify-orange: #fc8019; }
+    .btn-orange { background-color: var(--grocify-orange); color: white; border: none; font-weight: 700; }
+    .btn-orange:hover { background-color: #e36a05; color: white; }
+    .form-range::-webkit-slider-thumb { background: var(--grocify-orange); }
+    .form-range::-moz-range-thumb { background: var(--grocify-orange); }
+    #adminRangeMap { z-index: 1; }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const slider = document.getElementById('rangeSlider');
+        const output = document.getElementById('rangeValue');
+        
+        // Data from Django Context
+        let lat = {{ store_lat|default:9.9312 }};
+        let lng = {{ store_lng|default:76.2673 }};
+
+        // 1. Initialize Map
+        const map = L.map('adminRangeMap').setView([lat, lng], 13);
+
+        // 2. Add Tile Layer (The actual map images)
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        // 3. Add Draggable Store Marker
+        const marker = L.marker([lat, lng], { draggable: true }).addTo(map);
+
+        // 4. Add Delivery Range Circle
+        let circle = L.circle([lat, lng], {
+            color: '#fc8019',
+            fillColor: '#fc8019',
+            fillOpacity: 0.15,
+            weight: 2,
+            radius: slider.value * 1000 // Convert KM to Meters
+        }).addTo(map);
+
+        // Update Circle when Slider moves
+        slider.oninput = function() {
+            output.innerHTML = this.value + " km";
+            circle.setRadius(this.value * 1000);
+        }
+
+        // Update Form when Marker is dragged
+        marker.on('dragend', function(e) {
+            const pos = marker.getLatLng();
+            document.getElementById('storeLat').value = pos.lat.toFixed(6);
+            document.getElementById('storeLng').value = pos.lng.toFixed(6);
+            circle.setLatLng(pos);
+            map.panTo(pos);
+        });
+
+        // Fix for Leaflet maps loading in hidden tabs or modals
+        setTimeout(() => { map.invalidateSize(); }, 200);
+    });
+</script>
+{% endblock %}

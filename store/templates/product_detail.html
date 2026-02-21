@@ -1,0 +1,136 @@
+{% extends 'base.html' %}
+
+{% block body %}
+<div class="container py-5 mt-4">
+    <div class="row g-lg-5 g-4 align-items-start">
+        <div class="col-md-5">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white text-center p-4">
+                {% if product.image %}
+                    <img src="{{ product.image.url }}" alt="{{ product.name }}" 
+                         style="max-width: 100%; height: 350px; object-fit: contain; display: block; margin: 0 auto;">
+                {% else %}
+                    <div class="bg-light d-flex align-items-center justify-content-center rounded-4" style="height: 350px;">
+                        <i class="bi bi-image text-muted display-1"></i>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="col-md-7">
+            <div class="ps-lg-4">
+                <span class="badge bg-light text-orange border mb-2 px-3 py-2 rounded-pill fw-bold">
+                    {{ product.category.name|upper }}
+                </span>
+                <h1 class="fw-bold display-6 mb-2" style="color: #1c1c27;">{{ product.name }}</h1>
+                
+                <div class="d-flex align-items-center gap-3 my-4 p-3 rounded-3" style="background: #fdfdfd; border: 1px solid #f1f1f1;">
+                    <div class="price-container">
+                        <span class="text-dark fw-bold h2 m-0">₹{{ product.selling_price }}</span>
+                    </div>
+                    <div class="d-flex flex-column">
+                        <span class="text-muted text-decoration-line-through small m-0">MRP ₹{{ product.mrp }}</span>
+                        {% if product.discount_percentage > 0 %}
+                            <div class="d-flex gap-2 align-items-center mt-1">
+                                <span class="badge bg-success">SAVE ₹{{ product.savings }}</span>
+                                <span class="badge bg-light text-success border border-success">{{ product.discount_percentage }}% OFF</span>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <h6 class="fw-bold mb-2">Product Description</h6>
+                <p class="text-muted mb-4" style="line-height: 1.6;">
+                    {{ product.description|default:"Grown with care and delivered fresh." }}
+                </p>
+
+                <div class="pt-3">
+                    <div id="add-to-cart-wrapper" class="d-flex gap-3 align-items-center">
+                        <div class="quantity-control d-flex align-items-center border rounded-3" style="height: 58px; background: white;">
+                            <button class="btn px-3" onclick="changeQty(-1)"><i class="bi bi-dash"></i></button>
+                            <span id="display-qty" class="fw-bold px-2" style="min-width: 30px; text-align: center;">1</span>
+                            <button class="btn px-3" onclick="changeQty(1)"><i class="bi bi-plus"></i></button>
+                        </div>
+                        <button onclick="processAddToCart()" class="btn btn-orange flex-grow-1 py-3 fw-bold rounded-3 shadow-sm">
+                            <i class="bi bi-cart-plus-fill me-2"></i> ADD TO CART
+                        </button>
+                    </div>
+
+                    <div id="go-to-cart-wrapper" class="d-none">
+                        <div class="d-flex gap-3">
+                            <a href="{% url 'cart_page' %}" class="btn btn-success flex-grow-1 py-3 fw-bold rounded-3 shadow-sm">
+                                <i class="bi bi-bag-check-fill me-2"></i> GO TO CART
+                            </a>
+                            <button onclick="removeFromCart('{{ product.id }}')" class="btn btn-outline-danger py-3 px-4 rounded-3">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                        <p class="text-success small fw-bold mt-2"><i class="bi bi-info-circle me-1"></i> This item is already in your cart.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let currentQty = 1;
+    const productId = "{{ product.id }}";
+
+    // Run on page load
+    document.addEventListener("DOMContentLoaded", function() {
+        checkCartStatus();
+    });
+
+    function checkCartStatus() {
+        let cart = JSON.parse(localStorage.getItem('grocify_cart')) || [];
+        const isInCart = cart.some(item => item.id === productId);
+        
+        const addWrapper = document.getElementById('add-to-cart-wrapper');
+        const goWrapper = document.getElementById('go-to-cart-wrapper');
+
+        if (isInCart) {
+            addWrapper.classList.add('d-none');
+            goWrapper.classList.remove('d-none');
+        } else {
+            addWrapper.classList.remove('d-none');
+            goWrapper.classList.add('d-none');
+        }
+    }
+
+    function changeQty(val) {
+        currentQty += val;
+        if (currentQty < 1) currentQty = 1;
+        document.getElementById('display-qty').innerText = currentQty;
+    }
+
+    function processAddToCart() {
+        const pName = "{{ product.name }}";
+        const pPrice = parseFloat("{{ product.selling_price }}");
+
+        let cart = JSON.parse(localStorage.getItem('grocify_cart')) || [];
+        cart.push({ id: productId, name: pName, price: pPrice, quantity: currentQty });
+
+        localStorage.setItem('grocify_cart', JSON.stringify(cart));
+        
+        if (typeof updateNavbarBadge === "function") updateNavbarBadge();
+        
+        checkCartStatus(); // Instantly swap the buttons
+    }
+
+    function removeFromCart(id) {
+        let cart = JSON.parse(localStorage.getItem('grocify_cart')) || [];
+        cart = cart.filter(item => item.id !== id);
+        localStorage.setItem('grocify_cart', JSON.stringify(cart));
+        
+        if (typeof updateNavbarBadge === "function") updateNavbarBadge();
+        
+        checkCartStatus(); // Swap back to "Add to Cart"
+    }
+</script>
+
+<style>
+    .text-orange { color: #fc8019 !important; }
+    .btn-orange { background-color: #fc8019; color: white; border: none; transition: 0.3s; height: 58px; }
+    .btn-orange:hover { background-color: #e36a05; transform: translateY(-2px); }
+</style>
+{% endblock %}
