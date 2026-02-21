@@ -5,9 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Grocify - Instamart Clone</title>
     
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css"/>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -15,7 +12,7 @@
     <style>
         :root {
             --brand-orange: #fc8019;
-            --navbar-bg: rgba(255, 255, 255, 0.9);
+            --navbar-bg: rgba(255, 255, 255, 0.98);
             --body-bg: #f8f9fc;
             --text-dark: #1c1c27;
             --text-muted: #686b78;
@@ -24,34 +21,37 @@
         body { 
             background-color: var(--body-bg); 
             font-family: 'Plus Jakarta Sans', sans-serif; 
-            padding-top: 90px;
+            padding-top: 135px; /* Space for the 2-row mobile navbar */
             color: var(--text-dark);
         }
 
+        /* --- SMART NAVBAR STYLES --- */
         .navbar { 
             background: var(--navbar-bg); 
             backdrop-filter: blur(15px);
             -webkit-backdrop-filter: blur(15px);
-            height: 80px; 
             border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-            transition: all 0.3s ease;
+            padding: 12px 0;
+            transition: transform 0.3s ease-in-out;
         }
+
+        .navbar-hidden { transform: translateY(-100%); }
 
         .brand-logo { 
             color: var(--brand-orange); 
             font-weight: 800; 
-            font-size: 1.7rem; 
+            font-size: 1.6rem; 
             text-decoration: none !important;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 5px;
         }
 
         .search-container { 
             background: #f1f2f6; 
             border-radius: 12px; 
-            padding: 5px 15px; 
-            width: 500px; 
+            padding: 8px 15px; 
+            width: 100%; 
             border: 1px solid transparent;
             transition: 0.3s;
         }
@@ -63,160 +63,236 @@
         }
 
         .search-input {
-            border: none;
-            background: transparent;
-            outline: none;
-            width: 100%;
-            padding: 8px;
-            font-size: 0.95rem;
+            border: none; background: transparent; outline: none;
+            width: 100%; padding: 5px; font-size: 0.95rem;
         }
 
         .nav-link-custom {
-            color: var(--text-dark);
-            text-decoration: none !important;
-            font-weight: 700;
-            padding: 10px 15px;
-            border-radius: 10px;
-            transition: 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 8px;
+            color: var(--text-dark); text-decoration: none !important;
+            font-weight: 700; padding: 8px 12px; border-radius: 8px;
+            transition: 0.2s; display: flex; align-items: center;
         }
+        .nav-link-custom:hover { background: rgba(252, 128, 25, 0.08); color: var(--brand-orange); }
 
-        .nav-link-custom:hover {
-            background: rgba(252, 128, 25, 0.08);
-            color: var(--brand-orange);
-        }
-
-        #cart-badge {
-            background-color: var(--brand-orange);
-            font-size: 0.7rem;
-            border: 2px solid white;
-        }
-
-        .btn-orange { background-color: var(--brand-orange); color: white; border: none; }
+        .btn-orange { background-color: var(--brand-orange); color: white; border: none; transition: 0.3s; }
         .btn-orange:hover { background-color: #e36a05; color: white; }
         .text-orange { color: var(--brand-orange); }
 
         body::before {
-            content: "";
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
+            content: ""; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: radial-gradient(circle at 10% 20%, rgba(252, 128, 25, 0.03) 0%, transparent 40%),
                         radial-gradient(circle at 90% 80%, rgba(252, 128, 25, 0.03) 0%, transparent 40%);
             z-index: -1;
         }
 
-        footer {
-            background: white;
-            border-top: 1px solid #eee;
-            padding: 60px 0 30px;
-            margin-top: 100px;
+        /* --- FLEXBOX GRID FOR APP-STYLE LAYOUT --- */
+        .nav-left { order: 1; display: flex; align-items: center; }
+        .nav-right { order: 2; display: flex; align-items: center; }
+        .nav-search { order: 3; width: 100%; margin-top: 15px; position: relative; }
+
+        @media (max-width: 991px) {
+            body { padding-bottom: 70px; } /* Space for bottom tabs */
+            .dropdown-menu { position: absolute !important; right: 0; left: auto; }
         }
 
-        .footer-heading { font-weight: 800; margin-bottom: 20px; color: var(--text-dark); }
-        .footer-link { 
-            color: var(--text-muted); 
-            text-decoration: none; 
-            display: block; 
-            margin-bottom: 10px;
-            transition: 0.2s;
+        @media (min-width: 992px) {
+            body { padding-top: 90px; padding-bottom: 0; } 
+            .nav-left { flex: 1; }
+            .nav-search { order: 2; width: auto; flex: 2; margin-top: 0; padding: 0 40px; display: flex; justify-content: center; }
+            .nav-right { order: 3; flex: 1; justify-content: flex-end; gap: 20px; }
         }
+
+        /* Footer & Mobile Tabs */
+        footer { background: white; border-top: 1px solid #eee; padding: 40px 0 30px; margin-top: 0px; }
+        .footer-heading { font-weight: 800; margin-bottom: 20px; color: var(--text-dark); }
+        .footer-link { color: var(--text-muted); text-decoration: none; display: block; margin-bottom: 10px; transition: 0.2s; }
         .footer-link:hover { color: var(--brand-orange); transform: translateX(5px); }
+
+        .mobile-bottom-tabs { z-index: 1040; box-shadow: 0 -2px 10px rgba(0,0,0,0.05); }
+        .mobile-tab-item { flex: 1; color: #686b78; transition: 0.2s; }
+        .mobile-tab-item.active-tab { color: var(--brand-orange) !important; }
+        .mobile-tab-item i { font-size: 1.4rem; margin-bottom: 2px; }
+        .mobile-tab-item span { font-size: 0.65rem; }
     </style>
 </head>
 
 <body>
-    <nav class="navbar fixed-top">
-        <div class="container px-4">
-            <div class="d-flex align-items-center justify-content-between w-100">
+    <nav class="navbar fixed-top" id="main-navbar">
+        <div class="container px-3 px-md-4 d-flex flex-wrap align-items-center justify-content-between">
+            
+            <div class="nav-left gap-4">
+                <a href="{% url 'home' %}" class="brand-logo">
+                    <i class="bi bi-lightning-charge-fill"></i> Grocify
+                </a>
                 
-                <div class="d-flex align-items-center gap-4">
-                    <a href="{% url 'home' %}" class="brand-logo">
-                        <i class="bi bi-lightning-charge-fill"></i> Grocify
+                <div class="d-none d-lg-block border-start ps-4 ms-2">
+                    <span class="fw-bold small text-muted text-uppercase">Delivery to</span><br>
+                    <a href="#" class="text-decoration-none text-dark" data-bs-toggle="modal" data-bs-target="#locationModal">
+                        <span id="nav-location-text" class="fw-bold small">
+                            <i class="bi bi-geo-alt-fill text-orange"></i> Select Location
+                        </span>
+                        <i class="bi bi-chevron-down small ms-1"></i>
                     </a>
-                    <div class="d-none d-xl-block border-start ps-4">
-                        <span class="fw-bold small text-muted text-uppercase">Delivery to</span><br>
-                        <a href="#" class="text-decoration-none text-dark" data-bs-toggle="modal" data-bs-target="#locationModal">
-                            <span id="nav-location-text" class="fw-bold small">
-                                <i class="bi bi-geo-alt-fill text-orange"></i> Select Location
-                            </span>
-                            <i class="bi bi-chevron-down small ms-1"></i>
-                        </a>
-                    </div>
                 </div>
+            </div>
 
-              <form action="#" method="GET" class="d-none d-lg-block position-relative" style="width: 500px;">
-                <div class="search-container">
-                    <div class="d-flex align-items-center">
-                        <i class="bi bi-search text-muted"></i>
-                        <input type="text" id="swiggy-search" class="search-input" 
-                            placeholder="Search for 'Bread', 'Milk', 'Eggs'..." autocomplete="off">
-                    </div>
-                </div>
+            <div class="nav-right">
                 
-                <div id="search-suggestions" class="list-group position-absolute w-100 shadow-lg mt-1 d-none" 
-                    style="z-index: 1050; border-radius: 12px; overflow: hidden; background: white;">
-                    </div>
-            </form>
+                <div class="d-lg-none text-end">
+                    <a href="#" class="text-decoration-none text-dark" data-bs-toggle="modal" data-bs-target="#locationModal">
+                        <div class="fw-bold text-dark d-flex align-items-center justify-content-end gap-1" id="nav-location-title-mobile" style="font-size: 0.95rem;">
+                            <i class="bi bi-geo-alt-fill text-orange"></i> Location <i class="bi bi-chevron-down small text-muted"></i>
+                        </div>
+                        <div class="small text-muted text-truncate" id="nav-location-text-mobile" style="max-width: 140px; font-size: 0.75rem;">
+                            Select delivery location
+                        </div>
+                    </a>
+                </div>
 
-                <div class="d-flex align-items-center gap-3">
+                <div class="d-none d-lg-flex align-items-center gap-3">
                     <div class="dropdown">
-                        <a href="#" class="nav-link-custom" data-bs-toggle="dropdown">
-                            <i class="bi bi-person-circle fs-4"></i>
-                            
-                            <span class="d-none d-md-block">
-                                {% if user.is_authenticated %}
-                                    {{ user.first_name|default:user.username }}
-                                {% else %}
-                                    Login / Sign Up
-                                {% endif %}
+                        <a href="#" class="text-dark text-decoration-none d-flex align-items-center" data-bs-toggle="dropdown">
+                            <i class="bi bi-person-circle" style="font-size: 1.8rem;"></i>
+                            <span class="ms-2 fw-bold">
+                                {% if user.is_authenticated %}{{ user.first_name|default:user.username }}{% else %}Login{% endif %}
                             </span>
                         </a>
-                        <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-3 p-2">
+                        <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2 p-2" style="min-width: 200px;">
                             {% if user.is_authenticated %}
-                                <li><a class="dropdown-item rounded-2" href="{% url 'user_dashboard' %}">My Profile</a></li>
-                                <li><a class="dropdown-item rounded-2" href="{% url 'my_orders' %}">My Orders</a></li>
-                                
+                                <li><a class="dropdown-item rounded-2 py-2 fw-semibold" href="{% url 'user_dashboard' %}"><i class="bi bi-person me-2"></i> My Profile</a></li>
+                                <li><a class="dropdown-item rounded-2 py-2 fw-semibold" href="{% url 'my_orders' %}"><i class="bi bi-box-seam me-2"></i> My Orders</a></li>
                                 {% if user.is_staff %}
                                     <li><hr class="dropdown-divider"></li>
-                                    <li>
-                                        <a class="dropdown-item rounded-2 fw-bold text-primary" href="{% url 'admin_dashboard' %}">
-                                            <i class="bi bi-speedometer2 me-2"></i> Admin Panel
-                                        </a>
-                                    </li>
+                                    <li><a class="dropdown-item rounded-2 py-2 fw-bold text-primary" href="{% url 'admin_dashboard' %}"><i class="bi bi-speedometer2 me-2"></i> Admin Panel</a></li>
                                 {% endif %}
-
                                 <li><hr class="dropdown-divider"></li>
                                 <li>
                                     <form action="{% url 'logout' %}" method="post" class="m-0">
-                                        {% csrf_token %}
-                                        <button type="submit" class="dropdown-item text-danger rounded-2">
-                                            <i class="bi bi-box-arrow-right me-2"></i> Logout
-                                        </button>
+                                        {% csrf_token %}<button type="submit" class="dropdown-item text-danger rounded-2 py-2 fw-semibold"><i class="bi bi-box-arrow-right me-2"></i> Logout</button>
                                     </form>
                                 </li>
                             {% else %}
-                                <li><a class="dropdown-item rounded-2 fw-bold text-orange" href="#" data-bs-toggle="modal" data-bs-target="#loginModal">Login / Sign Up</a></li>
+                                <li><a class="dropdown-item rounded-2 fw-bold text-orange py-2" href="#" data-bs-toggle="modal" data-bs-target="#loginModal"><i class="bi bi-box-arrow-in-right me-2"></i> Login / Sign Up</a></li>
                             {% endif %}
                         </ul>
                     </div>
 
-                    <a href="{% url 'cart_page' %}" class="nav-link-custom position-relative">
-                        <i class="bi bi-cart3 fs-4"></i>
-                        <span class="d-none d-md-block">Cart</span>
-                        <span id="cart-badge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill" style="display: none;">0</span>
+                    <a href="{% url 'cart_page' %}" class="text-dark text-decoration-none position-relative d-flex align-items-center ms-2">
+                        <i class="bi bi-cart3" style="font-size: 1.8rem;"></i>
+                        <span class="ms-2 fw-bold">Cart</span>
+                        <span class="cart-badge-count position-absolute top-0 start-100 translate-middle badge rounded-pill" style="display: none; background-color: var(--brand-orange); font-size: 0.65rem; transform: translate(-30%, 10%) !important;">0</span>
                     </a>
                 </div>
-
             </div>
+
+            <div class="nav-search">
+                <form action="#" method="GET" class="w-100 mx-auto" style="max-width: 650px;">
+                    <div class="search-container shadow-sm border bg-white">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-search text-muted fs-5"></i>
+                            <input type="text" id="swiggy-search" class="search-input ms-2" placeholder="Search for products, brands and more" autocomplete="off">
+                        </div>
+                    </div>
+                    <div id="search-suggestions" class="list-group position-absolute w-100 shadow-lg mt-1 d-none" style="z-index: 1050; border-radius: 12px; overflow: hidden; background: white; max-width: 650px;"></div>
+                </form>
+            </div>
+
         </div>
     </nav>
 
     <main>
         {% block body %} {% endblock %}
     </main>
+
+    <div class="mobile-bottom-tabs fixed-bottom d-lg-none bg-white border-top pb-1">
+        <div class="d-flex justify-content-around align-items-center py-2">
+            <a href="{% url 'home' %}" class="text-decoration-none text-center mobile-tab-item" id="tab-home">
+                <i class="bi bi-house-door-fill d-block"></i>
+                <span class="fw-bold d-block">Home</span>
+            </a>
+            <a href="#" onclick="document.getElementById('swiggy-search').focus(); window.scrollTo({top: 0, behavior: 'smooth'});" class="text-decoration-none text-center mobile-tab-item" id="tab-search">
+                <i class="bi bi-search d-block"></i>
+                <span class="fw-bold d-block">Search</span>
+            </a>
+            <a href="{% url 'cart_page' %}" class="text-decoration-none text-center mobile-tab-item position-relative" id="tab-cart">
+                <i class="bi bi-cart3 d-block"></i>
+                <span class="cart-badge-count position-absolute badge rounded-pill" style="top: -2px; right: 15%; background-color: var(--brand-orange); font-size: 0.6rem; display: none;">0</span>
+                <span class="fw-bold d-block">Cart</span>
+            </a>
+            <a href="{% if user.is_authenticated %}{% url 'user_dashboard' %}{% else %}#{% endif %}" 
+               {% if not user.is_authenticated %}data-bs-toggle="modal" data-bs-target="#loginModal"{% endif %}
+               class="text-decoration-none text-center mobile-tab-item" id="tab-account">
+                <i class="bi bi-person-circle d-block"></i>
+                <span class="fw-bold d-block">Account</span>
+            </a>
+        </div>
+    </div>
+
+    <footer>
+        <div class="container">
+            <div class="row g-4">
+                <div class="col-lg-4">
+                    <h3 class="brand-logo mb-3">Grocify</h3>
+                    <p class="text-muted">Fastest grocery delivery service in Kochi. We bring the store to your door in 10 minutes.</p>
+                </div>
+                <div class="col-6 col-lg-2">
+                    <h6 class="footer-heading">Company</h6>
+                    <a href="#" class="footer-link">About Us</a>
+                    <a href="#" class="footer-link">Careers</a>
+                </div>
+                <div class="col-6 col-lg-2">
+                    <h6 class="footer-heading">Support</h6>
+                    <a href="#" class="footer-link">Help Center</a>
+                    <a href="#" class="footer-link">Contact Us</a>
+                </div>
+                <div class="col-lg-4 text-lg-end">
+                    <h6 class="footer-heading">Download App</h6>
+                    <div class="d-flex gap-2 justify-content-lg-end">
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg" width="130" style="cursor:pointer" alt="Google Play Store">
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/3/3c/Download_on_the_App_Store_Badge.svg" width="130" style="cursor:pointer" alt="Apple App Store">
+                    </div>
+                </div>
+            </div>
+            <hr class="my-5 opacity-5">
+            <p class="text-center text-muted small m-0">© 2026 Grocify Technologies Pvt. Ltd.</p>
+        </div>
+    </footer>
+
+    <div class="modal fade" id="locationModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-md modal-dialog-centered">
+            <div class="modal-content rounded-4 border-0 shadow-lg">
+                <div class="modal-header border-0 p-4 pb-0">
+                    <h4 class="modal-title fw-bold">Select Delivery Address</h4>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    {% if user.is_authenticated %}
+                        <div class="list-group list-group-flush mb-3">
+                            {% for addr in user.address_set.all %}
+                                {% if addr.is_active %}
+                                <button class="list-group-item list-group-item-action border-0 py-3 px-0 d-flex align-items-start gap-3" 
+                                        onclick="selectNavbarAddress('{{ addr.id }}', '{{ addr.city|escapejs }}', '{{ addr.type|escapejs }}')">
+                                    <i class="bi {% if addr.type == 'Home' %}bi-house-door-fill{% elif addr.type == 'Work' %}bi-briefcase-fill{% else %}bi-geo-alt-fill{% endif %} text-orange fs-5 mt-1"></i>
+                                    <div>
+                                        <div class="fw-bold text-dark">{{ addr.type }}</div>
+                                        <div class="small text-muted text-truncate" style="max-width: 300px;">{{ addr.address_line }}, {{ addr.city }}</div>
+                                    </div>
+                                </button>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                        <a href="{% url 'user_dashboard' %}" class="btn btn-outline-orange w-100 py-3 rounded-4 fw-bold border-dashed text-center text-decoration-none" style="border-style: dashed; border-width: 2px;"><i class="bi bi-plus-lg me-2"></i> Add New Address</a>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="bi bi-geo-alt display-1 text-muted opacity-25"></i>
+                            <p class="text-muted mt-3 mb-4">Please login to view your saved addresses.</p>
+                            <button class="btn btn-orange px-4 py-2 rounded-pill fw-bold" data-bs-toggle="modal" data-bs-target="#loginModal" data-bs-dismiss="modal">Login to Continue</button>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
 
     <div class="modal fade" id="loginModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
@@ -226,7 +302,6 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body p-4">
-                    
                     <div id="otp-step-1">
                         <p class="text-muted mb-4">Enter your details to receive a one-time password.</p>
                         <div class="mb-3">
@@ -240,9 +315,7 @@
                                 <input type="tel" id="login-phone" class="form-control bg-light" placeholder="Enter 10-digit number" maxlength="10">
                             </div>
                         </div>
-                        <button type="button" onclick="requestOtp()" id="btn-request-otp" class="btn btn-orange w-100 py-3 fw-bold rounded-3 shadow-sm">
-                            Get OTP
-                        </button>
+                        <button type="button" onclick="requestOtp()" id="btn-request-otp" class="btn btn-orange w-100 py-3 fw-bold rounded-3 shadow-sm">Get OTP</button>
                     </div>
 
                     <div id="otp-step-2" style="display: none;">
@@ -251,117 +324,68 @@
                             <label class="form-label small fw-bold">Enter OTP</label>
                             <input type="text" id="login-otp" class="form-control bg-light text-center fs-3 letter-spacing-2" placeholder="••••" maxlength="4">
                         </div>
-                        <button type="button" onclick="submitOtp()" id="btn-submit-otp" class="btn btn-orange w-100 py-3 fw-bold rounded-3 shadow-sm">
-                            Verify & Login
-                        </button>
-                        <div class="text-center mt-3">
-                            <a href="#" onclick="resetOtpModal()" class="text-muted small text-decoration-none"><i class="bi bi-pencil-square me-1"></i> Change Phone Number</a>
-                        </div>
+                        <button type="button" onclick="submitOtp()" id="btn-submit-otp" class="btn btn-orange w-100 py-3 fw-bold rounded-3 shadow-sm">Verify & Login</button>
+                        <div class="text-center mt-3"><a href="#" onclick="resetOtpModal()" class="text-muted small text-decoration-none"><i class="bi bi-pencil-square me-1"></i> Change Phone Number</a></div>
                     </div>
-
                     <div id="login-alert" class="alert alert-danger mt-3 mb-0" style="display: none;"></div>
-
                 </div>
             </div>
         </div>
     </div>
-    <div class="modal fade" id="locationModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content rounded-4 border-0 shadow-lg">
-            <div class="modal-header border-0 p-4 pb-0">
-                <h4 class="modal-title fw-bold">Select Delivery Location</h4>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body p-4">
-                <div class="row g-3">
-                    <div class="col-12">
-                        <button onclick="detectMyLocation()" class="btn btn-light w-100 py-3 rounded-3 border fw-bold text-orange mb-3">
-                            <i class="bi bi-cursor-fill me-2"></i> Detect My Current Location
-                        </button>
-                        <div id="selectionMap" style="height: 350px; width: 100%;" class="rounded-3 shadow-sm border"></div>
-                    </div>
-                </div>
-                <div class="mt-4">
-                    <p class="small text-muted mb-2">Selected Address:</p>
-                    <h6 id="selected-address-preview" class="fw-bold">No location selected</h6>
-                    <button type="button" onclick="confirmNavbarLocation()" class="btn btn-orange w-100 py-3 mt-3 fw-bold rounded-3 shadow-sm">
-                        Confirm Location
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-    <footer>
-        <div class="container">
-            <div class="row g-4">
-                <div class="col-lg-4">
-                    <h3 class="brand-logo mb-3">Grocify</h3>
-                    <p class="text-muted">Fastest grocery delivery service in Kochi. We bring the store to your door in 10 minutes.</p>
-                </div>
-                <div class="col-6 col-lg-2">
-                    <h6 class="footer-heading">Company</h6>
-                    <a href="#" class="footer-link">About Us</a>
-                    <a href="#" class="footer-link">Careers</a>
-                    <a href="#" class="footer-link">Team</a>
-                </div>
-                <div class="col-6 col-lg-2">
-                    <h6 class="footer-heading">Support</h6>
-                    <a href="#" class="footer-link">Help Center</a>
-                    <a href="#" class="footer-link">Contact Us</a>
-                    <a href="#" class="footer-link">Refunds</a>
-                </div>
-                <div class="col-lg-4 text-lg-end">
-                    <h6 class="footer-heading">Download App</h6>
-                    <div class="d-flex gap-2 justify-content-lg-end">
-                        <img src="https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg" width="130" style="cursor:pointer" alt="Google Play Store">
-                        <img src="https://upload.wikimedia.org/wikipedia/commons/3/3c/Download_on_the_App_Store_Badge.svg" width="130" style="cursor:pointer" alt="Apple App Store">
-                    </div>
-                </div>
-            </div>
-            <hr class="my-5 opacity-5">
-            <p class="text-center text-muted small">© 2026 Grocify Technologies Pvt. Ltd.</p>
-        </div>
-    </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // --- 1. Cart Badge Logic ---
+        // --- Smart Auto-Hiding Navbar Logic ---
+        let lastScrollTop = 0;
+        const navbar = document.getElementById('main-navbar');
+
+        window.addEventListener('scroll', function() {
+            let currentScroll = window.pageYOffset || document.documentElement.scrollTop;
+            if (currentScroll > lastScrollTop && currentScroll > 80) {
+                navbar.classList.add('navbar-hidden');
+                const suggestionsBox = document.getElementById('search-suggestions');
+                if (suggestionsBox) suggestionsBox.classList.add('d-none');
+            } else {
+                navbar.classList.remove('navbar-hidden');
+            }
+            lastScrollTop = currentScroll <= 0 ? 0 : currentScroll; 
+        }, false);
+
+        // --- Active Tab Highlighter ---
+        document.addEventListener("DOMContentLoaded", function() {
+            const currentPath = window.location.pathname;
+            if (currentPath === '/' || currentPath.includes('/home')) {
+                document.getElementById('tab-home').classList.add('active-tab');
+            } else if (currentPath.includes('/cart')) {
+                document.getElementById('tab-cart').classList.add('active-tab');
+            } else if (currentPath.includes('/dashboard') || currentPath.includes('/profile') || currentPath.includes('/orders')) {
+                document.getElementById('tab-account').classList.add('active-tab');
+            }
+        });
+
+        // --- Cart Badge Logic ---
         function updateNavbarBadge() {
             const cart = JSON.parse(localStorage.getItem('grocify_cart')) || [];
             const count = cart.reduce((total, item) => total + item.quantity, 0);
-            const badge = document.getElementById('cart-badge');
-            if (badge) {
+            document.querySelectorAll('.cart-badge-count').forEach(badge => {
                 badge.innerText = count;
                 badge.style.display = count > 0 ? 'block' : 'none';
-            }
+            });
         }
         document.addEventListener('DOMContentLoaded', updateNavbarBadge);
 
-        // --- 2. OTP Login Logic ---
+        // --- OTP Logic ---
         const csrfToken = '{{ csrf_token }}';
-
         function requestOtp() {
             const phone = document.getElementById('login-phone').value.trim();
             const name = document.getElementById('login-name').value.trim();
             const btn = document.getElementById('btn-request-otp');
             const alertBox = document.getElementById('login-alert');
 
-            if (phone.length < 10) {
-                alertBox.innerText = "Please enter a valid 10-digit phone number.";
-                alertBox.style.display = 'block';
-                return;
-            }
+            if (phone.length < 10) { alertBox.innerText = "Please enter a valid 10-digit phone number."; alertBox.style.display = 'block'; return; }
+            btn.disabled = true; btn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span> Sending...`; alertBox.style.display = 'none';
 
-            btn.disabled = true;
-            btn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span> Sending OTP...`;
-            alertBox.style.display = 'none';
-
-            fetch("{% url 'send_otp' %}", {
-                method: "POST",
-                headers: { "Content-Type": "application/json", "X-CSRFToken": csrfToken },
-                body: JSON.stringify({ phone: phone, name: name })
-            })
+            fetch("{% url 'send_otp' %}", { method: "POST", headers: { "Content-Type": "application/json", "X-CSRFToken": csrfToken }, body: JSON.stringify({ phone: phone, name: name }) })
             .then(res => res.json())
             .then(data => {
                 if (data.status === 'success') {
@@ -369,19 +393,8 @@
                     document.getElementById('otp-step-2').style.display = 'block';
                     document.getElementById('display-phone').innerText = "+91 " + phone;
                     document.getElementById('loginModalTitle').innerText = 'Verify Security Code';
-                } else {
-                    alertBox.innerText = data.message || "Failed to send OTP.";
-                    alertBox.style.display = 'block';
-                    btn.disabled = false;
-                    btn.innerHTML = 'Get OTP';
-                }
-            })
-            .catch(() => {
-                alertBox.innerText = "Network error. Try again.";
-                alertBox.style.display = 'block';
-                btn.disabled = false;
-                btn.innerHTML = 'Get OTP';
-            });
+                } else { alertBox.innerText = data.message || "Failed to send OTP."; alertBox.style.display = 'block'; btn.disabled = false; btn.innerHTML = 'Get OTP'; }
+            }).catch(() => { alertBox.innerText = "Network error."; alertBox.style.display = 'block'; btn.disabled = false; btn.innerHTML = 'Get OTP'; });
         }
 
         function submitOtp() {
@@ -389,165 +402,97 @@
             const btn = document.getElementById('btn-submit-otp');
             const alertBox = document.getElementById('login-alert');
 
-            if (otp.length < 4) {
-                alertBox.innerText = "Please enter the 4-digit OTP.";
-                alertBox.style.display = 'block';
-                return;
-            }
+            if (otp.length < 4) { alertBox.innerText = "Enter the 4-digit OTP."; alertBox.style.display = 'block'; return; }
+            btn.disabled = true; btn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span> Verifying...`; alertBox.style.display = 'none';
 
-            btn.disabled = true;
-            btn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span> Verifying...`;
-            alertBox.style.display = 'none';
-
-            fetch("{% url 'verify_otp' %}", {
-                method: "POST",
-                headers: { "Content-Type": "application/json", "X-CSRFToken": csrfToken },
-                body: JSON.stringify({ otp: otp })
-            })
+            fetch("{% url 'verify_otp' %}", { method: "POST", headers: { "Content-Type": "application/json", "X-CSRFToken": csrfToken }, body: JSON.stringify({ otp: otp }) })
             .then(res => res.json())
             .then(data => {
-                if (data.status === 'success') {
-                    window.location.reload(); 
-                } else {
-                    alertBox.innerText = data.message || "Invalid OTP.";
-                    alertBox.style.display = 'block';
-                    btn.disabled = false;
-                    btn.innerHTML = 'Verify & Login';
-                }
-            })
-            .catch(() => {
-                alertBox.innerText = "Network error. Try again.";
-                alertBox.style.display = 'block';
-                btn.disabled = false;
-                btn.innerHTML = 'Verify & Login';
-            });
+                if (data.status === 'success') { window.location.reload(); } 
+                else { alertBox.innerText = data.message || "Invalid OTP."; alertBox.style.display = 'block'; btn.disabled = false; btn.innerHTML = 'Verify & Login'; }
+            }).catch(() => { alertBox.innerText = "Network error."; alertBox.style.display = 'block'; btn.disabled = false; btn.innerHTML = 'Verify & Login'; });
         }
 
         function resetOtpModal() {
-            document.getElementById('otp-step-1').style.display = 'block';
-            document.getElementById('otp-step-2').style.display = 'none';
-            document.getElementById('loginModalTitle').innerText = 'Login / Sign Up';
-            document.getElementById('login-alert').style.display = 'none';
-            document.getElementById('btn-request-otp').disabled = false;
-            document.getElementById('btn-request-otp').innerHTML = 'Get OTP';
+            document.getElementById('otp-step-1').style.display = 'block'; document.getElementById('otp-step-2').style.display = 'none';
+            document.getElementById('loginModalTitle').innerText = 'Login / Sign Up'; document.getElementById('login-alert').style.display = 'none';
+            document.getElementById('btn-request-otp').disabled = false; document.getElementById('btn-request-otp').innerHTML = 'Get OTP';
             document.getElementById('login-otp').value = ''; 
         }
 
+        // --- Location Selection Logic ---
+        function selectNavbarAddress(addrId, city, type) {
+            const desktopString = `${type} - ${city}`;
+            const navText = document.getElementById('nav-location-text');
+            if (navText) navText.innerHTML = `<i class="bi bi-geo-alt-fill text-orange"></i> ${desktopString}`;
+            
+            const mobileTitle = document.getElementById('nav-location-title-mobile');
+            const mobileSub = document.getElementById('nav-location-text-mobile');
+            let icon = 'bi-geo-alt-fill';
+            if(type === 'Home') icon = 'bi-house-door-fill';
+            if(type === 'Work') icon = 'bi-briefcase-fill';
 
+            if (mobileTitle) mobileTitle.innerHTML = `<i class="bi ${icon} text-orange"></i> ${type} <i class="bi bi-chevron-down small text-muted"></i>`;
+            if (mobileSub) mobileSub.innerHTML = city;
+            
+            localStorage.setItem('user_nav_location', city);
+            localStorage.setItem('user_nav_type', type);
+            localStorage.setItem('user_nav_address_id', addrId);
+            
+            const modalElement = document.getElementById('locationModal');
+            const modal = bootstrap.Modal.getInstance(modalElement) || new bootstrap.Modal(modalElement);
+            if (modal) modal.hide();
 
+            if (typeof syncCheckoutWithNavbar === "function") syncCheckoutWithNavbar(addrId);
+        }
 
-        let selectionMap, selectionMarker;
-let tempLat, tempLng, tempAddress;
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedCity = localStorage.getItem('user_nav_location');
+            const savedType = localStorage.getItem('user_nav_type') || 'Location';
+            
+            if (savedCity) {
+                const navText = document.getElementById('nav-location-text');
+                if (navText) navText.innerHTML = `<i class="bi bi-geo-alt-fill text-orange"></i> ${savedType} - ${savedCity}`;
 
-// Initialize Map when modal opens
-document.getElementById('locationModal').addEventListener('shown.bs.modal', function () {
-    if (!selectionMap) {
-        // Default to a central location (e.g., Kochi)
-        selectionMap = L.map('selectionMap').setView([9.9312, 76.2673], 13);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; OpenStreetMap'
-        }).addTo(selectionMap);
+                const mobileTitle = document.getElementById('nav-location-title-mobile');
+                const mobileSub = document.getElementById('nav-location-text-mobile');
+                let icon = 'bi-geo-alt-fill';
+                if(savedType === 'Home') icon = 'bi-house-door-fill';
+                if(savedType === 'Work') icon = 'bi-briefcase-fill';
 
-        selectionMarker = L.marker([9.9312, 76.2673], { draggable: true }).addTo(selectionMap);
-        
-        selectionMarker.on('dragend', function(e) {
-            updateLocationInfo(selectionMarker.getLatLng().lat, selectionMarker.getLatLng().lng);
+                if (mobileTitle) mobileTitle.innerHTML = `<i class="bi ${icon} text-orange"></i> ${savedType} <i class="bi bi-chevron-down small text-muted"></i>`;
+                if (mobileSub) mobileSub.innerHTML = savedCity;
+            }
         });
 
-        selectionMap.on('click', function(e) {
-            selectionMarker.setLatLng(e.latlng);
-            updateLocationInfo(e.latlng.lat, e.latlng.lng);
-        });
-    }
-    selectionMap.invalidateSize();
-});
+        // --- Product Searchbar Logic ---
+        document.getElementById('swiggy-search').addEventListener('input', function(e) {
+            const query = e.target.value;
+            const suggestionsBox = document.getElementById('search-suggestions');
 
-function updateLocationInfo(lat, lng) {
-    tempLat = lat;
-    tempLng = lng;
-    // Use Nominatim (OpenStreetMap) for free reverse geocoding
-    fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`)
-        .then(res => res.json())
-        .then(data => {
-            // Simplify address for navbar (e.g., "Vyttila, Kochi")
-            const addr = data.address;
-            tempAddress = (addr.suburb || addr.neighbourhood || addr.city_district || addr.city || "Unknown Location");
-            document.getElementById('selected-address-preview').innerText = data.display_name;
-        });
-}
-
-function detectMyLocation() {
-    if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(position => {
-            const lat = position.coords.latitude;
-            const lng = position.coords.longitude;
-            selectionMap.setView([lat, lng], 16);
-            selectionMarker.setLatLng([lat, lng]);
-            updateLocationInfo(lat, lng);
-        }, () => {
-            alert("Could not detect location. Please select manually.");
-        });
-    }
-}
-
-function confirmNavbarLocation() {
-    if (tempAddress) {
-        document.getElementById('nav-location-text').innerHTML = `<i class="bi bi-geo-alt-fill text-orange"></i> ${tempAddress}`;
-        // Optional: Save to localStorage so it persists after refresh
-        localStorage.setItem('user_nav_location', tempAddress);
-        const modal = bootstrap.Modal.getInstance(document.getElementById('locationModal'));
-        modal.hide();
-    }
-}
-
-// Load saved location on startup
-document.addEventListener('DOMContentLoaded', () => {
-    const savedLoc = localStorage.getItem('user_nav_location');
-    if (savedLoc) {
-        document.getElementById('nav-location-text').innerHTML = `<i class="bi bi-geo-alt-fill text-orange"></i> ${savedLoc}`;
-    }
-});
-
-
-
-
-
-/*searchbar*/
-document.getElementById('swiggy-search').addEventListener('input', function(e) {
-    const query = e.target.value;
-    const suggestionsBox = document.getElementById('search-suggestions');
-
-    // Only search if the user has typed more than 1 character
-    if (query.length > 1) {
-        fetch(`/search-suggestions/?q=${query}`)
-            .then(response => response.json())
-            .then(data => {
-                let html = '';
-                if (data.results.length > 0) {
-                    data.results.forEach(product => {
-                        html += `
-                            <a href="/product/${product.id}/" class="list-group-item list-group-item-action py-3 border-0">
-                                <i class="bi bi-search me-3 text-muted small"></i>
-                                <strong>${product.name}</strong>
-                            </a>`;
+            if (query.length > 1) {
+                fetch(`/search-suggestions/?q=${query}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        let html = '';
+                        if (data.results.length > 0) {
+                            data.results.forEach(product => {
+                                html += `<a href="/product/${product.id}/" class="list-group-item list-group-item-action py-3 border-0"><i class="bi bi-search me-3 text-muted small"></i><strong>${product.name}</strong></a>`;
+                            });
+                            suggestionsBox.innerHTML = html;
+                            suggestionsBox.classList.remove('d-none');
+                        } else { suggestionsBox.classList.add('d-none'); }
                     });
-                    suggestionsBox.innerHTML = html;
-                    suggestionsBox.classList.remove('d-none');
-                } else {
-                    suggestionsBox.classList.add('d-none');
-                }
-            });
-    } else {
-        suggestionsBox.classList.add('d-none');
-    }
-});
+            } else { suggestionsBox.classList.add('d-none'); }
+        });
 
-// Close suggestions when clicking anywhere else on the screen
-document.addEventListener('click', function(e) {
-    if (!document.getElementById('swiggy-search').contains(e.target)) {
-        document.getElementById('search-suggestions').classList.add('d-none');
-    }
-});
+        document.addEventListener('click', function(e) {
+            const searchBar = document.getElementById('swiggy-search');
+            const suggestionsBox = document.getElementById('search-suggestions');
+            if (searchBar && suggestionsBox && !searchBar.contains(e.target)) {
+                suggestionsBox.classList.add('d-none');
+            }
+        });
     </script>
 </body>
 </html>

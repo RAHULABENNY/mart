@@ -8,33 +8,63 @@
     
     <div class="row g-5">
         <div class="col-lg-8">
+            
             <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h5 class="fw-bold m-0"><i class="bi bi-geo-alt me-2"></i>Select Delivery Address</h5>
-                    <a href="{% url 'user_dashboard' %}" class="btn btn-sm btn-outline-orange">+ Add New</a>
+                <h5 class="fw-bold mb-4"><i class="bi bi-geo-alt-fill text-orange me-2"></i>Delivery Details</h5>
+                
+                <div class="bg-light p-4 rounded-4 border position-relative mb-3" style="border-left: 4px solid #fc8019 !important;">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <span class="small text-muted fw-bold text-uppercase letter-spacing-1">Delivering To</span>
+                            <h5 class="fw-bold text-dark m-0 mt-2" id="active-address-title">
+                                {% if addresses %}Loading...{% else %}No Address Found{% endif %}
+                            </h5>
+                            <p class="text-muted small m-0 mt-1" id="active-address-detail">
+                                {% if not addresses %}Please add a delivery address.{% endif %}
+                            </p>
+                        </div>
+                        <div>
+                            <button class="btn btn-sm btn-outline-secondary fw-bold px-3" type="button" data-bs-toggle="collapse" data-bs-target="#addressDropdown">
+                                Change <i class="bi bi-chevron-down ms-1"></i>
+                            </button>
+                        </div>
+                    </div>
                 </div>
                 
-                <div class="row g-3" id="address-list">
-                    {% for address in addresses %}
-                    <div class="col-md-6">
-                        <label class="card border-0 bg-light rounded-4 p-3 h-100 cursor-pointer address-card position-relative">
-                            <input type="radio" name="selected_address" value="{{ address.id }}" class="form-check-input position-absolute top-0 end-0 m-3" {% if forloop.first %}checked{% endif %}>
-                            <div class="badge bg-white text-dark border mb-2">{{ address.type }}</div>
-                            <h6 class="fw-bold">{{ address.full_name }}</h6>
-                            <p class="text-muted small mb-1">{{ address.address_line }}</p>
-                            <p class="text-muted small m-0">{{ address.city }}, {{ address.state }} - {{ address.pincode }}</p>
+                <div class="collapse {% if not addresses %}show{% endif %}" id="addressDropdown">
+                    <div class="pt-3 border-top mt-2">
+                        <h6 class="fw-bold mb-3">Saved Addresses</h6>
+                        <div class="row g-3" id="address-list">
+                            {% for address in addresses %}
+                                {% if address.is_active %}
+                                <div class="col-md-6">
+                                    <label class="card border-0 bg-light rounded-4 p-3 h-100 cursor-pointer address-card position-relative" 
+                                           data-city="{{ address.city }}" data-type="{{ address.type }}">
+                                        <input type="radio" name="selected_address" value="{{ address.id }}" class="form-check-input position-absolute top-0 end-0 m-3" {% if forloop.first %}checked{% endif %}>
+                                        
+                                        <div class="badge bg-white text-dark border mb-2">{{ address.type }}</div>
+                                        <h6 class="fw-bold addr-title">{{ address.full_name }} ({{ address.type }})</h6>
+                                        <p class="text-muted small mb-1 addr-detail">{{ address.address_line }}, {{ address.city }}, {{ address.state }} - {{ address.pincode }}</p>
+                                        
+                                        {% if not address.latitude %}
+                                            <div class="text-danger small mt-2 fw-bold"><i class="bi bi-exclamation-triangle"></i> Needs Map Pin</div>
+                                        {% endif %}
+                                    </label>
+                                </div>
+                                {% endif %}
+                            {% empty %}
+                                <div class="col-12 text-center py-4 bg-light rounded-4 border border-dashed mb-3">
+                                    <p class="text-muted mb-0">No saved addresses found.</p>
+                                </div>
+                            {% endfor %}
                             
-                            {% if not address.latitude %}
-                                <div class="text-danger small mt-2 fw-bold"><i class="bi bi-exclamation-triangle"></i> Needs Map Pin</div>
-                            {% endif %}
-                        </label>
+                            <div class="col-12 mt-2">
+                                <a href="{% url 'user_dashboard' %}" class="btn btn-outline-orange w-100 py-3 rounded-4 fw-bold border-dashed">
+                                    <i class="bi bi-plus-lg me-2"></i> Add New Address
+                                </a>
+                            </div>
+                        </div>
                     </div>
-                    {% empty %}
-                    <div class="col-12 text-center py-4">
-                        <p class="text-muted">No saved addresses found.</p>
-                        <a href="{% url 'user_dashboard' %}" class="btn btn-orange btn-sm">Add Address</a>
-                    </div>
-                    {% endfor %}
                 </div>
             </div>
 
@@ -50,8 +80,7 @@
         <div class="col-lg-4">
             <div class="card border-0 shadow-sm rounded-4 p-4 bg-white position-sticky" style="top: 100px;">
                 <h5 class="fw-bold mb-3">Order Summary</h5>
-                <div id="checkout-items" class="mb-3" style="max-height: 300px; overflow-y: auto;">
-                    </div>
+                <div id="checkout-items" class="mb-3" style="max-height: 300px; overflow-y: auto;"></div>
                 
                 <hr>
                 <div class="d-flex justify-content-between mb-2">
@@ -80,7 +109,6 @@
     let cart = JSON.parse(localStorage.getItem('grocify_cart')) || [];
     let totalAmount = 0;
 
-    // Load Cart Data from LocalStorage
     document.addEventListener('DOMContentLoaded', () => {
         const container = document.getElementById('checkout-items');
         
@@ -107,16 +135,65 @@
         container.innerHTML = html;
         document.getElementById('checkout-total').innerText = '₹' + totalAmount;
         document.getElementById('checkout-grand-total').innerText = '₹' + totalAmount;
+
+        // --- STEP 1: Sync Checkout Radio to match Navbar on Page Load ---
+        const savedAddrId = localStorage.getItem('user_nav_address_id');
+        if (savedAddrId) {
+            const radioToSelect = document.querySelector(`input[name="selected_address"][value="${savedAddrId}"]`);
+            if (radioToSelect) {
+                radioToSelect.checked = true;
+            }
+        }
+        updateActiveAddressDisplay();
     });
+
+    // --- STEP 2: Function called by the Navbar Modal to instantly change the checkout radio button ---
+    function syncCheckoutWithNavbar(addrId) {
+        const radioToSelect = document.querySelector(`input[name="selected_address"][value="${addrId}"]`);
+        if (radioToSelect) {
+            radioToSelect.checked = true;
+            updateActiveAddressDisplay();
+        }
+    }
+
+    // --- STEP 3: Function to change the Navbar if the user clicks a radio button in Checkout ---
+    document.querySelectorAll('input[name="selected_address"]').forEach(radio => {
+        radio.addEventListener('change', function() {
+            updateActiveAddressDisplay();
+            
+            // Sync BACK to Navbar
+            const card = this.closest('.address-card');
+            const city = card.getAttribute('data-city');
+            const type = card.getAttribute('data-type');
+            const displayString = `${type} - ${city}`;
+            
+            localStorage.setItem('user_nav_address_id', this.value);
+            localStorage.setItem('user_nav_location', displayString);
+            
+            const navText = document.getElementById('nav-location-text');
+            if (navText) navText.innerHTML = `<i class="bi bi-geo-alt-fill text-orange"></i> ${displayString}`;
+            
+            // Auto-close the dropdown
+            const bsCollapse = new bootstrap.Collapse(document.getElementById('addressDropdown'), { toggle: false });
+            bsCollapse.hide();
+        });
+    });
+
+    function updateActiveAddressDisplay() {
+        const selectedRadio = document.querySelector('input[name="selected_address"]:checked');
+        if (selectedRadio) {
+            const card = selectedRadio.closest('.address-card');
+            const title = card.querySelector('.addr-title').innerText;
+            const detail = card.querySelector('.addr-detail').innerText;
+            
+            document.getElementById('active-address-title').innerText = title;
+            document.getElementById('active-address-detail').innerText = detail;
+        }
+    }
 
     function showErrorMsg(msg) {
         const alertBox = document.getElementById('checkout-alerts');
-        alertBox.innerHTML = `
-            <div class="alert alert-danger alert-dismissible fade show border-0 shadow-sm mb-4" role="alert">
-                <i class="bi bi-x-circle-fill me-2"></i> ${msg}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-        `;
+        alertBox.innerHTML = `<div class="alert alert-danger alert-dismissible fade show border-0 shadow-sm mb-4"><i class="bi bi-x-circle-fill me-2"></i> ${msg}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>`;
         window.scrollTo(0, 0);
     }
 
@@ -125,7 +202,9 @@
         const btn = document.getElementById('place-order-btn');
         
         if (!selectedAddress) {
-            showErrorMsg("Please select a delivery address!");
+            showErrorMsg("Please add and select a delivery address to place your order!");
+            const bsCollapse = new bootstrap.Collapse(document.getElementById('addressDropdown'), { toggle: false });
+            bsCollapse.show();
             return;
         }
 
@@ -151,11 +230,9 @@
             const result = isJson ? await response.json() : null;
 
             if (response.ok && result && result.status === 'success') {
-                // SUCCESS: Clear cart and redirect to success page
                 localStorage.removeItem('grocify_cart');
                 window.location.href = "{% url 'order_success' %}";
             } else {
-                // ERROR: Show the specific error from Python (range check, no pin, etc.)
                 throw new Error(result ? result.message : "Server Error");
             }
         })
@@ -168,14 +245,22 @@
 </script>
 
 <style>
+    .letter-spacing-1 { letter-spacing: 1px; }
     .btn-outline-orange { color: #fc8019; border-color: #fc8019; }
     .btn-outline-orange:hover { background-color: #fc8019; color: white; }
     .btn-orange { background-color: #fc8019; color: white; border: none; transition: 0.3s; }
     .btn-orange:hover { background-color: #e36a05; transform: translateY(-2px); }
     .text-orange { color: #fc8019; }
+    
+    .cursor-pointer { cursor: pointer; }
     .address-card { transition: 0.2s; border: 2px solid transparent !important; }
     .address-card:hover { border-color: #fc8019 !important; background-color: #fff5eb !important; }
+    
     input[type="radio"]:checked + .badge { background-color: #fc8019 !important; color: white !important; }
     .address-card input[type="radio"]:checked ~ h6 { color: #fc8019; }
+    .address-card:has(input[type="radio"]:checked) { border-color: #fc8019 !important; background-color: #fff5eb !important; }
+    
+    .border-dashed { border-style: dashed !important; border-width: 2px !important; border-color: #dee2e6 !important;}
+    .btn-outline-orange.border-dashed { border-color: #fc8019 !important; }
 </style>
 {% endblock %}

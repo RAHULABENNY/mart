@@ -2,6 +2,13 @@
 
 {% block body %}
 <div class="container py-5 mt-4">
+    
+    <div class="mb-4">
+        <a href="{% url 'home' %}" class="text-decoration-none text-muted fw-bold back-btn">
+            <i class="bi bi-arrow-left me-2"></i>Back to Home
+        </a>
+    </div>
+
     <div class="row g-lg-5 g-4 align-items-start">
         <div class="col-md-5">
             <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white text-center p-4">
@@ -132,5 +139,9 @@
     .text-orange { color: #fc8019 !important; }
     .btn-orange { background-color: #fc8019; color: white; border: none; transition: 0.3s; height: 58px; }
     .btn-orange:hover { background-color: #e36a05; transform: translateY(-2px); }
+    
+    /* New styling for the Back Button */
+    .back-btn { transition: color 0.2s; }
+    .back-btn:hover { color: #fc8019 !important; }
 </style>
 {% endblock %}
