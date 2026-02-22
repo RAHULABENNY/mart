@@ -3,7 +3,7 @@
 {% block body %}
 <div class="container py-5 mt-4">
     <div class="d-flex align-items-center gap-3 mb-5">
-        <a href="{% url 'home' %}" class="btn btn-outline-secondary rounded-circle p-2" style="width: 45px; height: 45px;">
+        <a href="{% url 'home' %}" class="btn btn-outline-secondary rounded-circle p-2 d-flex align-items-center justify-content-center" style="width: 45px; height: 45px;">
             <i class="bi bi-arrow-left fs-4"></i>
         </a>
         <h2 class="fw-bold m-0">{{ category.name }}</h2>
@@ -12,37 +12,43 @@
     <div class="row g-4">
         {% for product in products %}
         <div class="col-6 col-md-4 col-lg-3">
-            <div class="product-card h-100 position-relative p-3">
+            <div class="product-card h-100 position-relative p-3 d-flex flex-column">
                 {% if product.mrp > product.selling_price %}
                 <div class="position-absolute top-0 start-0 m-3 z-1">
                     <span class="badge bg-danger rounded-pill px-3 py-2">Sale</span>
                 </div>
                 {% endif %}
 
-                <div class="img-container mb-3" style="height: 180px;">
-                    <img src="{{ product.image.url }}" class="prod-img w-100 h-100" style="object-fit: contain;">
-                </div>
+                <a href="{% url 'product_detail' product.id %}" class="text-decoration-none">
+                    <div class="img-container mb-3" style="height: 180px;">
+                        <img src="{{ product.image.url }}" class="prod-img w-100 h-100" style="object-fit: contain;">
+                    </div>
+                </a>
                 
-                <div class="text-center">
+                <div class="text-center d-flex flex-column flex-grow-1">
                     <div class="text-warning mb-2 small">
                         <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
                     </div>
-                    <h6 class="fw-bold text-dark mb-1">{{ product.name }}</h6>
+                    <a href="{% url 'product_detail' product.id %}" class="text-decoration-none">
+                        <h6 class="fw-bold text-dark mb-1 text-truncate">{{ product.name }}</h6>
+                    </a>
                     <p class="text-muted small mb-2">{{ product.weight }}</p>
                     
-                    <div class="d-flex justify-content-center align-items-center gap-2 mb-3">
-                        <span class="text-orange fw-bold fs-5">₹{{ product.selling_price }}</span>
-                        {% if product.mrp > product.selling_price %}
-                            <span class="text-muted text-decoration-line-through small">₹{{ product.mrp }}</span>
-                        {% endif %}
-                    </div>
+                    <div class="mt-auto">
+                        <div class="d-flex justify-content-center align-items-center gap-2 mb-3">
+                            <span class="text-orange fw-bold fs-5">₹{{ product.selling_price }}</span>
+                            {% if product.mrp > product.selling_price %}
+                                <span class="text-muted text-decoration-line-through small">₹{{ product.mrp }}</span>
+                            {% endif %}
+                        </div>
 
-                    <button class="btn btn-outline-orange w-100 rounded-pill fw-bold add-to-cart"
-                         data-id="{{ product.id }}" 
-                         data-name="{{ product.name }}" 
-                         data-price="{{ product.selling_price }}">
-                         <i class="bi bi-cart-plus me-1"></i> Add to Cart
-                    </button>
+                        <button class="btn btn-outline-orange w-100 rounded-pill fw-bold add-to-cart-btn"
+                             data-id="{{ product.id }}" 
+                             data-name="{{ product.name|escapejs }}" 
+                             data-price="{{ product.selling_price }}">
+                             <i class="bi bi-cart-plus me-1"></i> <span>Add to Cart</span>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -56,8 +62,65 @@
     </div>
 </div>
 
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const cart = JSON.parse(localStorage.getItem('grocify_cart')) || [];
+        const buttons = document.querySelectorAll('.add-to-cart-btn');
+
+        // Function to visually disable the button
+        function setButtonToAdded(button) {
+            button.disabled = true;
+            button.classList.remove('btn-outline-orange');
+            button.classList.add('btn-secondary', 'text-white', 'border-secondary');
+            button.innerHTML = '<i class="bi bi-check-circle-fill me-1"></i> Added';
+        }
+
+        // Loop through all buttons on the page
+        buttons.forEach(button => {
+            const productId = button.getAttribute('data-id');
+
+            // 1. Check if item is already in cart on page load
+            const isInCart = cart.some(item => item.id === productId);
+            if (isInCart) {
+                setButtonToAdded(button);
+            }
+
+            // 2. Handle button click
+            button.addEventListener('click', function() {
+                const id = this.getAttribute('data-id');
+                const name = this.getAttribute('data-name');
+                const price = parseFloat(this.getAttribute('data-price'));
+
+                let currentCart = JSON.parse(localStorage.getItem('grocify_cart')) || [];
+                
+                // Add to cart array
+                currentCart.push({ 
+                    id: id, 
+                    name: name, 
+                    price: price, 
+                    quantity: 1 
+                });
+
+                // Save back to LocalStorage
+                localStorage.setItem('grocify_cart', JSON.stringify(currentCart));
+
+                // Force the Navbar badges to update instantly
+                if (typeof updateNavbarBadge === 'function') {
+                    updateNavbarBadge();
+                }
+
+                // Change button state
+                setButtonToAdded(this);
+            });
+        });
+    });
+</script>
+
 <style>
     .text-orange { color: #fc8019 !important; }
+    .btn-orange { background-color: #fc8019; color: white; border: none; transition: 0.3s; }
+    .btn-orange:hover { background-color: #e36a05; color: white; }
+    
     .btn-outline-orange { 
         color: #fc8019; border: 2px solid #fc8019; 
         transition: 0.3s;
@@ -65,6 +128,7 @@
     .btn-outline-orange:hover {
         background: #fc8019; color: #fff;
     }
+    
     .product-card {
         border: 1px solid #f0f0f0; border-radius: 12px; transition: 0.3s;
     }
