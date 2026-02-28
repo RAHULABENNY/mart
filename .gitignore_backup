@@ -1,0 +1,84 @@
+# ==============================
+# PYTHON
+# ==============================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# ==============================
+# VIRTUAL ENVIRONMENT
+# ==============================
+venv/
+env/
+ENV/
+.venv/
+
+# ==============================
+# DJANGO
+# ==============================
+*.log
+db.sqlite3
+db.sqlite3-journal
+media/
+staticfiles/
+local_settings.py
+
+# ==============================
+# ENVIRONMENT VARIABLES
+# ==============================
+.env
+.env.*
+*.env
+
+# ==============================
+# IDE - VS CODE
+# ==============================
+.vscode/
+
+# ==============================
+# IDE - PYCHARM
+# ==============================
+.idea/
+
+# ==============================
+# TESTING
+# ==============================
+.coverage
+htmlcov/
+.tox/
+.pytest_cache/
+
+# ==============================
+# OS FILES
+# ==============================
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ==============================
+# PYTHONANYWHERE (if deploying)
+# ==============================
+*.pid
+*.sock
+
+# ==============================
+# CACHE
+# ==============================
+.cache/
