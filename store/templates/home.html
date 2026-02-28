@@ -40,63 +40,42 @@
         </div>
     </div>
 
-    <div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
         <h2 class="fw-bold m-0 text-dark">Category</h2>
     </div>
-    <div class="scrolling-wrapper d-flex gap-4 pb-4 mb-5">
-        {% for category in categories_with_products %}
-        <a href="{% url 'category_products' category.id %}" class="text-decoration-none">
-            <div class="text-center" style="min-width: 130px;">
-                <div class="category-circle-md shadow-sm mb-2">
-                    <img src="{{ category.image.url }}" class="category-img-fit">
+    <div class="position-relative mb-5 scroll-container-wrapper">
+        <button class="btn rounded-circle scroll-btn scroll-left position-absolute top-50 start-0 translate-middle-y z-3 d-none d-md-flex align-items-center justify-content-center hidden" style="width: 40px; height: 40px; margin-left: -15px;">
+            <i class="bi bi-chevron-left"></i>
+        </button>
+
+        <div class="scrolling-wrapper scroll-wrapper d-flex gap-4 pb-2 px-1" style="scroll-behavior: smooth;">
+            {% for category in categories_with_products %}
+            <a href="{% url 'category_products' category.id %}" class="text-decoration-none">
+                <div class="text-center" style="min-width: 130px;">
+                    <div class="category-circle-md shadow-sm mb-2">
+                        <img src="{{ category.image.url }}" class="category-img-fit">
+                    </div>
+                    <h6 class="fw-bold text-dark small">{{ category.name }}</h6>
                 </div>
-                <h6 class="fw-bold text-dark small">{{ category.name }}</h6>
-            </div>
-        </a>
-        {% endfor %}
+            </a>
+            {% endfor %}
+        </div>
+
+        <button class="btn rounded-circle scroll-btn scroll-right position-absolute top-50 end-0 translate-middle-y z-3 d-none d-md-flex align-items-center justify-content-center hidden" style="width: 40px; height: 40px; margin-right: -15px;">
+            <i class="bi bi-chevron-right"></i>
+        </button>
     </div>
 
-    <div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
         <h2 class="fw-bold m-0 text-dark">Best Selling Products</h2>
     </div>
-    <div class="scrolling-wrapper d-flex gap-3 pb-4 mb-5">
-        {% for product in hot_deals %}
-        <div class="uniform-card shadow-sm">
-            <div class="uniform-img-container">
-                <img src="{{ product.image.url }}" class="uniform-prod-img">
-                {% if product.mrp > product.selling_price %}
-                <span class="badge-sale">{{ product.discount_percentage }}% OFF</span>
-                {% endif %}
-            </div>
-            <div class="p-3">
-                <h6 class="fw-bold text-dark text-truncate mb-1 small">{{ product.name }}</h6>
-                <p class="text-muted extra-small mb-2">{{ product.weight|default:"1 unit" }}</p>
-                <div class="d-flex justify-content-between align-items-center mt-2">
-                    <div class="d-flex flex-column">
-                        <span class="fw-bold text-dark">₹{{ product.selling_price }}</span>
-                        {% if product.mrp > product.selling_price %}
-                        <span class="text-muted text-decoration-line-through extra-small">₹{{ product.mrp }}</span>
-                        {% endif %}
-                    </div>
-                    <button class="add-btn-round add-to-cart" 
-                            data-id="{{ product.id }}" 
-                            data-name="{{ product.name }}" 
-                            data-price="{{ product.selling_price }}">
-                        <i class="bi bi-plus-lg"></i>
-                    </button>
-                </div>
-            </div>
-        </div>
-        {% endfor %}
-    </div>
+    <div class="position-relative mb-5 scroll-container-wrapper">
+        <button class="btn rounded-circle scroll-btn scroll-left position-absolute top-50 start-0 translate-middle-y z-3 d-none d-md-flex align-items-center justify-content-center hidden" style="width: 40px; height: 40px; margin-left: -15px;">
+            <i class="bi bi-chevron-left"></i>
+        </button>
 
-    {% for category in categories_with_products %}
-        {% if category.name|lower == "fruits" or category.name|lower == "vegetables" %}
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <h3 class="fw-bold m-0">{{ category.name }}</h3>
-        </div>
-        <div class="scrolling-wrapper d-flex gap-3 pb-4 mb-5">
-            {% for product in category.product_set.all %}
+        <div class="scrolling-wrapper scroll-wrapper d-flex gap-3 pb-3 px-1" style="scroll-behavior: smooth;">
+            {% for product in hot_deals %}
             <div class="uniform-card shadow-sm">
                 <div class="uniform-img-container">
                     <img src="{{ product.image.url }}" class="uniform-prod-img">
@@ -105,7 +84,7 @@
                     {% endif %}
                 </div>
                 <div class="p-3">
-                    <p class="fw-bold text-dark text-truncate m-0 small">{{ product.name }}</p>
+                    <h6 class="fw-bold text-dark text-truncate mb-1 small">{{ product.name }}</h6>
                     <p class="text-muted extra-small mb-2">{{ product.weight|default:"1 unit" }}</p>
                     <div class="d-flex justify-content-between align-items-center mt-2">
                         <div class="d-flex flex-column">
@@ -114,16 +93,67 @@
                             <span class="text-muted text-decoration-line-through extra-small">₹{{ product.mrp }}</span>
                             {% endif %}
                         </div>
-                        <div class="add-btn-round add-to-cart" 
-                             data-id="{{ product.id }}" 
-                             data-name="{{ product.name }}" 
-                             data-price="{{ product.selling_price }}">
+                        <button class="add-btn-round add-to-cart" 
+                                data-id="{{ product.id }}" 
+                                data-name="{{ product.name }}" 
+                                data-price="{{ product.selling_price }}">
                             <i class="bi bi-plus-lg"></i>
-                        </div>
+                        </button>
                     </div>
                 </div>
             </div>
             {% endfor %}
+        </div>
+
+        <button class="btn rounded-circle scroll-btn scroll-right position-absolute top-50 end-0 translate-middle-y z-3 d-none d-md-flex align-items-center justify-content-center hidden" style="width: 40px; height: 40px; margin-right: -15px;">
+            <i class="bi bi-chevron-right"></i>
+        </button>
+    </div>
+
+    {% for category in categories_with_products %}
+        {% if category.name|lower == "fruits" or category.name|lower == "vegetables" %}
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h3 class="fw-bold m-0">{{ category.name }}</h3>
+        </div>
+        <div class="position-relative mb-5 scroll-container-wrapper">
+            <button class="btn rounded-circle scroll-btn scroll-left position-absolute top-50 start-0 translate-middle-y z-3 d-none d-md-flex align-items-center justify-content-center hidden" style="width: 40px; height: 40px; margin-left: -15px;">
+                <i class="bi bi-chevron-left"></i>
+            </button>
+
+            <div class="scrolling-wrapper scroll-wrapper d-flex gap-3 pb-3 px-1" style="scroll-behavior: smooth;">
+                {% for product in category.product_set.all %}
+                <div class="uniform-card shadow-sm">
+                    <div class="uniform-img-container">
+                        <img src="{{ product.image.url }}" class="uniform-prod-img">
+                        {% if product.mrp > product.selling_price %}
+                        <span class="badge-sale">{{ product.discount_percentage }}% OFF</span>
+                        {% endif %}
+                    </div>
+                    <div class="p-3">
+                        <p class="fw-bold text-dark text-truncate m-0 small">{{ product.name }}</p>
+                        <p class="text-muted extra-small mb-2">{{ product.weight|default:"1 unit" }}</p>
+                        <div class="d-flex justify-content-between align-items-center mt-2">
+                            <div class="d-flex flex-column">
+                                <span class="fw-bold text-dark">₹{{ product.selling_price }}</span>
+                                {% if product.mrp > product.selling_price %}
+                                <span class="text-muted text-decoration-line-through extra-small">₹{{ product.mrp }}</span>
+                                {% endif %}
+                            </div>
+                            <div class="add-btn-round add-to-cart" 
+                                 data-id="{{ product.id }}" 
+                                 data-name="{{ product.name }}" 
+                                 data-price="{{ product.selling_price }}">
+                                <i class="bi bi-plus-lg"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <button class="btn rounded-circle scroll-btn scroll-right position-absolute top-50 end-0 translate-middle-y z-3 d-none d-md-flex align-items-center justify-content-center hidden" style="width: 40px; height: 40px; margin-right: -15px;">
+                <i class="bi bi-chevron-right"></i>
+            </button>
         </div>
         {% endif %}
     {% endfor %}
@@ -139,6 +169,30 @@
         display: flex;
     }
     .scrolling-wrapper::-webkit-scrollbar { display: none; }
+
+    /* PROFESSIONAL SCROLL BUTTON STYLES */
+    .scroll-btn {
+        background-color: white;
+        color: var(--brand-orange);
+        border: 1px solid #f0f0f0;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12) !important;
+        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        opacity: 1;
+        visibility: visible;
+    }
+    .scroll-btn:hover {
+        background-color: var(--brand-orange) !important;
+        color: white !important;
+        box-shadow: 0 6px 16px rgba(252, 128, 25, 0.35) !important;
+        /* Note: Important to keep translateY(-50%) so it stays vertically centered */
+        transform: translateY(-50%) scale(1.15) !important; 
+    }
+    .scroll-btn.hidden {
+        opacity: 0 !important;
+        visibility: hidden !important;
+        pointer-events: none !important;
+        transform: translateY(-50%) scale(0.8) !important; /* Shrinks slightly when hiding */
+    }
 
     .category-circle-md { width: 130px; height: 130px; border-radius: 50%; overflow: hidden; margin: 0 auto; background: #fff; border: 2px solid #eee; }
     .category-img-fit { width: 100%; height: 100%; object-fit: cover; }
@@ -187,19 +241,84 @@
 </style>
 
 <script>
-    document.addEventListener('click', function(e) {
-        const btn = e.target.closest('.add-to-cart');
-        if (btn) {
-            let cart = JSON.parse(localStorage.getItem('grocify_cart')) || [];
-            const productId = btn.dataset.id;
-            const existing = cart.find(item => item.id === productId);
-            if (existing) existing.quantity += 1;
-            else cart.push({ id: productId, name: btn.dataset.name, price: parseFloat(btn.dataset.price), quantity: 1 });
-            localStorage.setItem('grocify_cart', JSON.stringify(cart));
-            if (typeof updateNavbarBadge === "function") updateNavbarBadge();
-            btn.style.transform = "scale(0.9)";
-            setTimeout(() => btn.style.transform = "", 100);
+    document.addEventListener("DOMContentLoaded", function() {
+        
+        // --- DYNAMIC SCROLL BUTTON LOGIC ---
+        const scrollContainers = document.querySelectorAll('.scroll-container-wrapper');
+
+        function updateScrollButtons(container) {
+            const wrapper = container.querySelector('.scroll-wrapper');
+            const leftBtn = container.querySelector('.scroll-left');
+            const rightBtn = container.querySelector('.scroll-right');
+
+            if (!wrapper || !leftBtn || !rightBtn) return;
+
+            // Calculate max scroll distance
+            const maxScrollLeft = wrapper.scrollWidth - wrapper.clientWidth;
+
+            // Hide Left Button if at the very beginning (0px)
+            if (wrapper.scrollLeft <= 5) {
+                leftBtn.classList.add('hidden');
+            } else {
+                leftBtn.classList.remove('hidden');
+            }
+
+            // Hide Right Button if at the very end
+            if (Math.ceil(wrapper.scrollLeft) >= maxScrollLeft - 5) {
+                rightBtn.classList.add('hidden');
+            } else {
+                rightBtn.classList.remove('hidden');
+            }
         }
+
+        scrollContainers.forEach(container => {
+            const wrapper = container.querySelector('.scroll-wrapper');
+            const leftBtn = container.querySelector('.scroll-left');
+            const rightBtn = container.querySelector('.scroll-right');
+
+            // 1. Check visibility on page load
+            updateScrollButtons(container);
+
+            // 2. Check visibility when user is scrolling
+            wrapper.addEventListener('scroll', () => {
+                updateScrollButtons(container);
+            });
+
+            // 3. Button Click Actions
+            if (rightBtn) {
+                rightBtn.addEventListener('click', () => {
+                    // Scroll exactly one card + gap distance
+                    wrapper.scrollBy({ left: 350, behavior: 'smooth' });
+                });
+            }
+
+            if (leftBtn) {
+                leftBtn.addEventListener('click', () => {
+                    wrapper.scrollBy({ left: -350, behavior: 'smooth' });
+                });
+            }
+        });
+
+        // Re-check buttons if user resizes the window
+        window.addEventListener('resize', () => {
+            scrollContainers.forEach(container => updateScrollButtons(container));
+        });
+
+        // --- ADD TO CART LOGIC ---
+        document.addEventListener('click', function(e) {
+            const btn = e.target.closest('.add-to-cart');
+            if (btn) {
+                let cart = JSON.parse(localStorage.getItem('grocify_cart')) || [];
+                const productId = btn.dataset.id;
+                const existing = cart.find(item => item.id === productId);
+                if (existing) existing.quantity += 1;
+                else cart.push({ id: productId, name: btn.dataset.name, price: parseFloat(btn.dataset.price), quantity: 1 });
+                localStorage.setItem('grocify_cart', JSON.stringify(cart));
+                if (typeof updateNavbarBadge === "function") updateNavbarBadge();
+                btn.style.transform = "scale(0.9)";
+                setTimeout(() => btn.style.transform = "", 100);
+            }
+        });
     });
 </script>
 {% endblock %}
