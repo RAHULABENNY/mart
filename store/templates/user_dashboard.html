@@ -1,6 +1,9 @@
 {% extends 'base.html' %}
 
 {% block body %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
 <div class="container py-5 mt-4">
 
     {% if messages %}
@@ -21,7 +24,7 @@
                     <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center mb-2" style="width: 80px; height: 80px;">
                         <i class="bi bi-person-fill text-secondary fs-1"></i>
                     </div>
-                    <h5 class="fw-bold mb-0">{{ user.username }}</h5>
+                    <h5 class="fw-bold mb-0">{{ user.first_name|default:user.username }}</h5>
                 </div>
                 <div class="list-group list-group-flush border-0" role="tablist">
                     <a class="list-group-item list-group-item-action border-0 py-3 active rounded-3 fw-bold mb-1" data-bs-toggle="list" href="#overview">
@@ -29,6 +32,9 @@
                     </a>
                     <a class="list-group-item list-group-item-action border-0 py-3 rounded-3 mb-1" data-bs-toggle="list" href="#addresses">
                         <i class="bi bi-geo-alt me-2"></i> Saved Addresses
+                    </a>
+                    <a href="{% url 'my_orders' %}" class="list-group-item list-group-item-action border-0 py-3 rounded-3 mb-1">
+                        <i class="bi bi-box-seam me-2"></i> My Orders
                     </a>
                     <div class="border-top mt-2 pt-2">
                         <form action="{% url 'logout' %}" method="post" class="m-0">
@@ -133,29 +139,32 @@
 
 <script>
     // --- MAP LOGIC ---
-    let map, marker, rangeCircle;
+    let map, marker; // Removed rangeCircle
 
     document.getElementById('addAddressModal').addEventListener('shown.bs.modal', function () {
         if (!map) {
-            const storeLoc = [{{ store_lat|default:9.9312 }}, {{ store_lng|default:76.2673 }}];
-            const maxRangeMeters = {{ current_range|default:10 }} * 1000;
+            // 1. Safely parse the Django variables into numbers
+            const lat = parseFloat("{{ store_lat|default:'9.9312' }}");
+            const lng = parseFloat("{{ store_lng|default:'76.2673' }}");
+            const rangeKm = parseFloat("{{ current_range|default:'10' }}");
+            
+            const storeLoc = [lat, lng];
+            const maxRangeMeters = rangeKm * 1000;
 
-            map = L.map('map').setView(storeLoc, 12);
+            // 2. Initialize map (Zoomed in a bit closer to 13 since there is no circle to fit)
+            map = L.map('map').setView(storeLoc, 13);
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
-            rangeCircle = L.circle(storeLoc, {
-                color: '#fc8019',
-                fillColor: '#fc8019',
-                fillOpacity: 0.1,
-                radius: maxRangeMeters
-            }).addTo(map);
+            // --- CIRCLE DRAWING CODE REMOVED HERE ---
 
+            // 3. Add the draggable pin
             marker = L.marker(storeLoc, { draggable: true }).addTo(map);
 
             function handleMarkerUpdate(lat, lng) {
                 document.getElementById('hidden-lat').value = lat;
                 document.getElementById('hidden-lng').value = lng;
                 
+                // Keep the background logic: Check distance secretly
                 const dist = map.distance([lat, lng], storeLoc);
                 const btn = document.getElementById('save-address-btn');
                 
@@ -178,7 +187,13 @@
                 reverseGeocode(pos.lat, pos.lng);
             });
         }
-        map.invalidateSize();
+        
+        // Ensure map renders correctly after modal animation finishes
+        setTimeout(() => {
+            map.invalidateSize();
+            // Center the map on the pin when opened
+            map.setView(marker.getLatLng(), 13); 
+        }, 100);
     });
 
     function detectGPS() {
@@ -204,13 +219,11 @@
         }
     }
 
-    // --- NEW: AUTO-OPEN TABS LOGIC ---
+    // --- AUTO-OPEN TABS LOGIC ---
     document.addEventListener("DOMContentLoaded", function() {
         if(window.location.hash) {
-            // Find the link that corresponds to the hash (e.g., #addresses)
             var tabToOpen = document.querySelector('a[href="' + window.location.hash + '"]');
             if (tabToOpen) {
-                // Use Bootstrap's native tab initialization to show it
                 var tab = new bootstrap.Tab(tabToOpen);
                 tab.show();
             }

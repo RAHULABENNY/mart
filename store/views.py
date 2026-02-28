@@ -52,32 +52,35 @@ def send_otp(request):
         return JsonResponse({'status': 'success'})
 
 def verify_otp(request):
-    if request.method == 'POST':
-        data = json.loads(request.body)
-        user_otp = data.get('otp')
-        
-        session_otp = request.session.get('otp')
-        phone = request.session.get('phone')
-        name = request.session.get('temp_name') # 3. Retrieve Name
-        
-        if session_otp and user_otp == session_otp:
-            # Create or Get User
+    if request.method == "POST":
+        try:
+            # Read the JSON data sent from our JavaScript
+            data = json.loads(request.body)
+            phone = data.get('phone')
+            name = data.get('name', '')
+
+            # Basic validation
+            if not phone:
+                return JsonResponse({'status': 'error', 'message': 'Phone number is required.'})
+
+            # Get or create a User based on their phone number
+            # (We use the phone number as the username)
             user, created = User.objects.get_or_create(username=phone)
             
-            # 4. Update the user's name
-            if name:
+            # If it's a new user and they provided a name, save it
+            if created and name:
                 user.first_name = name
                 user.save()
-            
+
+            # Log the user into the Django session!
             login(request, user)
+
+            return JsonResponse({'status': 'success', 'message': 'Logged in successfully'})
             
-            # Clear session data
-            del request.session['otp']
-            del request.session['temp_name']
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)})
             
-            return JsonResponse({'status': 'success'})
-        
-        return JsonResponse({'status': 'error'})
+    return JsonResponse({'status': 'error', 'message': 'Invalid request method.'})
     
 
 def cart_page(request):

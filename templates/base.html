@@ -321,7 +321,7 @@
                     <div id="otp-step-2" style="display: none;">
                         <p class="text-muted mb-4">We've sent a 4-digit OTP to <span id="display-phone" class="fw-bold text-dark"></span></p>
                         <div class="mb-4">
-                            <label class="form-label small fw-bold">Enter OTP</label>
+                            <label class="form-label small fw-bold">Enter OTP (Use 1234)</label>
                             <input type="text" id="login-otp" class="form-control bg-light text-center fs-3 letter-spacing-2" placeholder="••••" maxlength="4">
                         </div>
                         <button type="button" onclick="submitOtp()" id="btn-submit-otp" class="btn btn-orange w-100 py-3 fw-bold rounded-3 shadow-sm">Verify & Login</button>
@@ -374,49 +374,91 @@
         }
         document.addEventListener('DOMContentLoaded', updateNavbarBadge);
 
-        // --- OTP Logic ---
+        // --- HARDCODED OTP LOGIC (For Testing) ---
         const csrfToken = '{{ csrf_token }}';
+        
         function requestOtp() {
             const phone = document.getElementById('login-phone').value.trim();
-            const name = document.getElementById('login-name').value.trim();
             const btn = document.getElementById('btn-request-otp');
             const alertBox = document.getElementById('login-alert');
 
-            if (phone.length < 10) { alertBox.innerText = "Please enter a valid 10-digit phone number."; alertBox.style.display = 'block'; return; }
-            btn.disabled = true; btn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span> Sending...`; alertBox.style.display = 'none';
+            if (phone.length < 10) { 
+                alertBox.innerText = "Please enter a valid 10-digit phone number."; 
+                alertBox.style.display = 'block'; 
+                return; 
+            }
+            
+            btn.disabled = true; 
+            btn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span> Sending...`; 
+            alertBox.style.display = 'none';
 
-            fetch("{% url 'send_otp' %}", { method: "POST", headers: { "Content-Type": "application/json", "X-CSRFToken": csrfToken }, body: JSON.stringify({ phone: phone, name: name }) })
-            .then(res => res.json())
-            .then(data => {
-                if (data.status === 'success') {
-                    document.getElementById('otp-step-1').style.display = 'none';
-                    document.getElementById('otp-step-2').style.display = 'block';
-                    document.getElementById('display-phone').innerText = "+91 " + phone;
-                    document.getElementById('loginModalTitle').innerText = 'Verify Security Code';
-                } else { alertBox.innerText = data.message || "Failed to send OTP."; alertBox.style.display = 'block'; btn.disabled = false; btn.innerHTML = 'Get OTP'; }
-            }).catch(() => { alertBox.innerText = "Network error."; alertBox.style.display = 'block'; btn.disabled = false; btn.innerHTML = 'Get OTP'; });
+            // Simulate API call delay for sending OTP
+            setTimeout(() => {
+                document.getElementById('otp-step-1').style.display = 'none';
+                document.getElementById('otp-step-2').style.display = 'block';
+                document.getElementById('display-phone').innerText = "+91 " + phone;
+                document.getElementById('loginModalTitle').innerText = 'Verify Security Code';
+                btn.disabled = false;
+                btn.innerHTML = 'Get OTP'; 
+            }, 500); 
         }
 
         function submitOtp() {
             const otp = document.getElementById('login-otp').value.trim();
+            const phone = document.getElementById('login-phone').value.trim();
+            const name = document.getElementById('login-name').value.trim();
             const btn = document.getElementById('btn-submit-otp');
             const alertBox = document.getElementById('login-alert');
 
-            if (otp.length < 4) { alertBox.innerText = "Enter the 4-digit OTP."; alertBox.style.display = 'block'; return; }
-            btn.disabled = true; btn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span> Verifying...`; alertBox.style.display = 'none';
+            if (otp.length < 4) { 
+                alertBox.innerText = "Enter the 4-digit OTP."; 
+                alertBox.style.display = 'block'; 
+                return; 
+            }
+            
+            btn.disabled = true; 
+            btn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span> Verifying...`; 
+            alertBox.style.display = 'none';
 
-            fetch("{% url 'verify_otp' %}", { method: "POST", headers: { "Content-Type": "application/json", "X-CSRFToken": csrfToken }, body: JSON.stringify({ otp: otp }) })
-            .then(res => res.json())
-            .then(data => {
-                if (data.status === 'success') { window.location.reload(); } 
-                else { alertBox.innerText = data.message || "Invalid OTP."; alertBox.style.display = 'block'; btn.disabled = false; btn.innerHTML = 'Verify & Login'; }
-            }).catch(() => { alertBox.innerText = "Network error."; alertBox.style.display = 'block'; btn.disabled = false; btn.innerHTML = 'Verify & Login'; });
+            // Hardcode OTP validation
+            setTimeout(() => {
+                if (otp === '1234') {
+                    // Send to backend to actually create the Django Session
+                    fetch("{% url 'verify_otp' %}", { 
+                        method: "POST", 
+                        headers: { "Content-Type": "application/json", "X-CSRFToken": csrfToken }, 
+                        body: JSON.stringify({ phone: phone, name: name, simulated: true }) 
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.status === 'success') { 
+                            window.location.reload(); 
+                        } else { 
+                            alertBox.innerText = data.message || "Login failed on backend."; 
+                            alertBox.style.display = 'block'; 
+                            btn.disabled = false; 
+                            btn.innerHTML = 'Verify & Login'; 
+                        }
+                    }).catch(() => {
+                        // Fallback reload if backend fails but we want to simulate success locally
+                        window.location.reload();
+                    });
+                } else { 
+                    alertBox.innerText = "Invalid OTP. Please use 1234."; 
+                    alertBox.style.display = 'block'; 
+                    btn.disabled = false; 
+                    btn.innerHTML = 'Verify & Login'; 
+                }
+            }, 500);
         }
 
         function resetOtpModal() {
-            document.getElementById('otp-step-1').style.display = 'block'; document.getElementById('otp-step-2').style.display = 'none';
-            document.getElementById('loginModalTitle').innerText = 'Login / Sign Up'; document.getElementById('login-alert').style.display = 'none';
-            document.getElementById('btn-request-otp').disabled = false; document.getElementById('btn-request-otp').innerHTML = 'Get OTP';
+            document.getElementById('otp-step-1').style.display = 'block'; 
+            document.getElementById('otp-step-2').style.display = 'none';
+            document.getElementById('loginModalTitle').innerText = 'Login / Sign Up'; 
+            document.getElementById('login-alert').style.display = 'none';
+            document.getElementById('btn-request-otp').disabled = false; 
+            document.getElementById('btn-request-otp').innerHTML = 'Get OTP';
             document.getElementById('login-otp').value = ''; 
         }
 
